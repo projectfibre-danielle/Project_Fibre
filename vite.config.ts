@@ -3,19 +3,10 @@ import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-
-export default defineConfig({
-  base: '/Project_fibre/',
-  plugins: [react()],
-  server: {
-    port: 3000,
-  },
-});
 
 export default defineConfig(() => {
   return {
-    base: './',
+    base: '/Project_fibre/',
     plugins: [
       react(),
       tailwindcss(),
@@ -33,7 +24,7 @@ export default defineConfig(() => {
           const srcAssets = path.resolve(__dirname, 'src/assets');
           const distAssets = path.resolve(distDir, 'src/assets');
           if (fs.existsSync(distDir) && fs.existsSync(srcAssets)) {
-            fs.cpSync(srcAssets, distAssets, {recursive: true, force: true});
+            fs.cpSync(srcAssets, distAssets, { recursive: true, force: true });
           }
         },
       },
