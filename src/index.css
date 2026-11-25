@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Epilogue", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-spec: "Space Grotesk", ui-monospace, monospace;
+
+  --color-cream: #fdf9f3;
+  --color-cream-soft: #faf6f0;
+  --color-cream-low: #f7f3ed;
+  --color-cream-container: #f1ede7;
+  --color-cream-high: #ebe8e2;
+  --color-ink: #1c1c18;
+  --color-plum: #2d1f3d;
+  --color-plum-muted: #4f4448;
+  --color-rose-deep: #7c5264;
+  --color-rose-blossom: #e8b4c8;
+  --color-rose-fixed: #ffd8e6;
+  --color-rose-hairline: #f2e7eb;
+  --color-outline-soft: #d3c2c7;
+  --color-lilac: #d8b4e2;
+  --color-lilac-soft: #ead5fd;
+  --color-lilac-deep: #685879;
+  --color-butter: #fef3c7;
+  --color-sage: #d1fae5;
+}
+
+@layer base {
+  html {
+    background-color: #fdf9f3;
+    color: #1c1c18;
+    font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: #fdf9f3;
+    color: #1c1c18;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: "Epilogue", ui-sans-serif, system-ui, sans-serif;
+    color: #2d1f3d;
+  }
+}
+
+.knitted-dot-mesh {
+  background-image: radial-gradient(#2d1f3d12 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.marshmallow-card {
+  background-color: #ffffff;
+  border: 1px solid #f2e7eb;
+  box-shadow: 0 10px 30px -14px rgba(45, 31, 61, 0.08);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.marshmallow-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px -14px rgba(45, 31, 61, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marshmallow-card,
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Editorial Drop Cap for Article Reader */
+.editorial-drop-cap::first-letter {
+  font-family: "Epilogue", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 3.25rem;
+  line-height: 0.85;
+  float: left;
+  margin-right: 0.75rem;
+  margin-top: 0.2rem;
+  color: #7c5264;
+}

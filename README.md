@@ -1,11 +1,19 @@
-<div align="center">
+# Project Fibre
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A contemporary fibre arts atelier journal, pattern notebook, and static Markdown blog designed for publishing directly on **GitHub Pages**.
 
-  <h1>Built with AI Studio</h2>
+## Design System
+Built with the **Kawaii Loom & Spun** visual tokens:
+- **Canvas**: Cozy Carded Cream (`#fdf9f3` / `#faf6f0`) with subtle knitted dot mesh (`16px × 16px`)
+- **Typography**: `Epilogue` display headings, `Plus Jakarta Sans` editorial body, `Space Grotesk` gauge & loom specs
+- **Palette**: Spun Blossom Rose (`#7c5264` / `#e8b4c8`), Deep Mulberry Plum (`#2d1f3d`), Soft Heather Lilac (`#d8b4e2`), Warm Butter (`#fef3c7`), and Minty Sage (`#d1fae5`)
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## Publishing to GitHub Pages
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+1. Push this repository to GitHub on the `main` branch.
+2. Open **Settings → Pages** in your GitHub repository and set **Source** to **GitHub Actions**.
+3. The included `.github/workflows/deploy.yml` workflow builds `dist/` via Vite and publishes automatically on every push.
 
-</div>
+## Writing New Posts
+- Use the in-app **Write Post** studio to compose essays in Markdown, preview them live, or import/export YAML-frontmatter `.md` files.
+- To commit posts permanently to your repository, add your post object to `src/data/posts.ts` and push to `main`.

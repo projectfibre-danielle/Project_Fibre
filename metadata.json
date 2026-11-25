@@ -1,0 +1,6 @@
+{
+  "name": "Kawaii Loom & Spun",
+  "description": "A contemporary fibre arts atelier journal, pattern notebook, and GitHub-ready editorial blog for weaving, handspinning, botanical dyeing, and knitwear.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
