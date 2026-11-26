@@ -1,6 +1,6 @@
 # Project Fibre
 
-A contemporary fibre arts atelier journal, pattern notebook, and static Markdown blog designed for publishing directly on **GitHub Pages**.
+A Fibre Arts resource and educational journey — built as a static Markdown blog designed for publishing directly on **GitHub Pages**.
 
 ## Design System
 Built with the **Kawaii Loom & Spun** visual tokens:

@@ -4,25 +4,62 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, Bookmark, Github, PenLine, Search } from 'lucide-react';
+import {
+  ArrowRight,
+  Bookmark,
+  Github,
+  Layers,
+  PenLine,
+  Search,
+} from 'lucide-react';
 import { Header, NavDestination } from './components/Header';
 import { PostReader } from './components/PostReader';
 import { PostStudioModal } from './components/PostStudioModal';
 import { ResilientImage } from './components/ResilientImage';
+import { ResourcesPage } from './components/ResourcesPage';
 import { DEFAULT_AUTHOR, INITIAL_POSTS, STUDIO_MEDIA } from './data/posts';
 import { BlogPost, CraftCategory } from './types/blog';
 
 type FilterTab = 'All' | CraftCategory | 'Saved';
+type RouteView =
+  | { type: 'home' }
+  | { type: 'resources' }
+  | { type: 'post'; slug: string };
 
-const STORAGE_POSTS_KEY = 'kawaii_loom_spun_custom_posts_v1';
-const STORAGE_SAVED_KEY = 'kawaii_loom_spun_saved_ids_v1';
+const STORAGE_POSTS_KEY = 'project_fibre_custom_posts_v1';
+const STORAGE_SAVED_KEY = 'project_fibre_saved_ids_v1';
 
-function getSlugFromHash(): string | null {
+const CRAFT_CATEGORIES: CraftCategory[] = [
+  'Weaving',
+  'Handspun',
+  'Knitwear',
+  'Crochet',
+  'Cross Stitch',
+  'Embroidery',
+  'Natural Dye',
+  'Pattern Notes',
+];
+
+function parseHashRoute(): { route: RouteView; category?: CraftCategory } {
   const hash = window.location.hash;
-  if (hash.startsWith('#/post/')) {
-    return decodeURIComponent(hash.slice('#/post/'.length));
+  if (hash === '#/resources') {
+    return { route: { type: 'resources' } };
   }
-  return null;
+  if (hash.startsWith('#/post/')) {
+    return {
+      route: {
+        type: 'post',
+        slug: decodeURIComponent(hash.slice('#/post/'.length)),
+      },
+    };
+  }
+  if (hash.startsWith('#/category/')) {
+    const rawCat = decodeURIComponent(hash.slice('#/category/'.length)) as CraftCategory;
+    if (CRAFT_CATEGORIES.includes(rawCat)) {
+      return { route: { type: 'home' }, category: rawCat };
+    }
+  }
+  return { route: { type: 'home' } };
 }
 
 export default function App() {
@@ -44,9 +81,11 @@ export default function App() {
     }
   });
 
-  const [activeSlug, setActiveSlug] = useState<string | null>(() => getSlugFromHash());
-  const [activeNav, setActiveNav] = useState<NavDestination>('journal');
-  const [filterTab, setFilterTab] = useState<FilterTab>('All');
+  const initialParsed = parseHashRoute();
+  const [route, setRoute] = useState<RouteView>(initialParsed.route);
+  const [filterTab, setFilterTab] = useState<FilterTab>(
+    initialParsed.category || 'All'
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [studioOpen, setStudioOpen] = useState(false);
   const [studioTab, setStudioTab] = useState<'compose' | 'github'>('compose');
@@ -56,7 +95,11 @@ export default function App() {
 
   useEffect(() => {
     const onHashChange = () => {
-      setActiveSlug(getSlugFromHash());
+      const parsed = parseHashRoute();
+      setRoute(parsed.route);
+      if (parsed.category) {
+        setFilterTab(parsed.category);
+      }
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
@@ -84,17 +127,24 @@ export default function App() {
   );
 
   const activePost = useMemo(
-    () => (activeSlug ? allPosts.find((p) => p.slug === activeSlug) || null : null),
-    [activeSlug, allPosts]
+    () =>
+      route.type === 'post'
+        ? allPosts.find((p) => p.slug === route.slug) || null
+        : null,
+    [route, allPosts]
   );
 
   const leadPost = useMemo(
-    () => allPosts.find((p) => p.featuredTier === 'lead') || allPosts[0],
+    () =>
+      allPosts.length > 0
+        ? allPosts.find((p) => p.featuredTier === 'lead') || allPosts[0]
+        : null,
     [allPosts]
   );
 
   const featuredPosts = useMemo(
-    () => allPosts.filter((p) => p.id !== leadPost?.id).slice(0, 3),
+    () =>
+      leadPost ? allPosts.filter((p) => p.id !== leadPost.id).slice(0, 3) : [],
     [allPosts, leadPost]
   );
 
@@ -123,12 +173,34 @@ export default function App() {
 
   const openPost = (slug: string) => {
     window.location.hash = `#/post/${encodeURIComponent(slug)}`;
-    setActiveSlug(slug);
+    setRoute({ type: 'post', slug });
   };
 
-  const closePost = () => {
+  const openCategoryPosts = (category: FilterTab, shouldScroll = true) => {
+    setFilterTab(category);
+    if (category === 'All' || category === 'Saved') {
+      window.location.hash = '#/';
+    } else {
+      window.location.hash = `#/category/${encodeURIComponent(category)}`;
+    }
+    setRoute({ type: 'home' });
+    if (shouldScroll) {
+      setTimeout(() => {
+        archiveSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 60);
+    }
+  };
+
+  const openResources = () => {
+    window.location.hash = '#/resources';
+    setRoute({ type: 'resources' });
+  };
+
+  const goHome = () => {
     window.location.hash = '#/';
-    setActiveSlug(null);
+    setRoute({ type: 'home' });
+    setFilterTab('All');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const toggleSave = (id: string) => {
@@ -138,35 +210,34 @@ export default function App() {
   };
 
   const handleNavigate = (dest: NavDestination) => {
-    setActiveNav(dest);
-    if (activeSlug) {
-      closePost();
-    }
-    if (dest === 'journal') {
-      setFilterTab('All');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (dest === 'resources') {
+      openResources();
       return;
     }
-    if (dest === 'patterns') {
-      setFilterTab('Weaving');
-      setTimeout(() => {
-        archiveSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 60);
+    if (dest === 'all-posts') {
+      goHome();
       return;
     }
-    if (dest === 'dye') {
-      setFilterTab('Natural Dye');
-      setTimeout(() => {
-        archiveSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 60);
+    if (dest === 'weaving') {
+      openCategoryPosts('Weaving');
       return;
     }
-    if (dest === 'atelier') {
-      setTimeout(() => {
-        atelierSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 60);
+    if (dest === 'handspun') {
+      openCategoryPosts('Handspun');
+      return;
+    }
+    if (dest === 'knitwear') {
+      openCategoryPosts('Knitwear');
     }
   };
+
+  const activeNav: NavDestination = useMemo(() => {
+    if (route.type === 'resources') return 'resources';
+    if (filterTab === 'Weaving') return 'weaving';
+    if (filterTab === 'Handspun') return 'handspun';
+    if (filterTab === 'Knitwear') return 'knitwear';
+    return 'all-posts';
+  }, [route.type, filterTab]);
 
   const openStudio = (tab: 'compose' | 'github' = 'compose') => {
     setStudioTab(tab);
@@ -178,18 +249,7 @@ export default function App() {
     openPost(newPost.slug);
   };
 
-  const filterTabs: FilterTab[] = [
-    'All',
-    'Weaving',
-    'Handspun',
-    'Knitwear',
-    'Crochet',
-    'Cross Stitch',
-    'Embroidery',
-    'Natural Dye',
-    'Pattern Notes',
-    'Saved',
-  ];
+  const filterTabs: FilterTab[] = ['All', ...CRAFT_CATEGORIES, 'Saved'];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fdf9f3] text-[#1c1c18]">
@@ -200,23 +260,25 @@ export default function App() {
       />
 
       <main className="flex-1">
-        {activePost ? (
+        {route.type === 'resources' ? (
+          <ResourcesPage onBack={goHome} />
+        ) : route.type === 'post' && activePost ? (
           <PostReader
             post={activePost}
             allPosts={allPosts}
             isSaved={savedIds.includes(activePost.id)}
             onToggleSave={toggleSave}
-            onBack={closePost}
+            onBack={goHome}
             onSelectPost={openPost}
           />
         ) : (
           <>
-            {/* Tier 1: Lead Story Split Hero on Knitted Dot Mesh Canvas */}
+            {/* Tier 1: Hero on Knitted Dot Mesh Canvas */}
             <section className="knitted-dot-mesh border-b border-[#f2e7eb]">
               <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 lg:py-16">
-                {leadPost && (
+                {leadPost ? (
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
-                    {/* Left Column: Editorial Lead Typography */}
+                    {/* Lead Post Typography */}
                     <div className="lg:col-span-6 flex flex-col justify-center">
                       <div className="flex items-center gap-2.5 text-xs font-spec tracking-wider text-[#685879] mb-4">
                         <span>Lead Essay</span>
@@ -225,7 +287,9 @@ export default function App() {
                         <span aria-hidden="true">·</span>
                         <time dateTime={leadPost.isoDate}>{leadPost.publishedAt}</time>
                         <span aria-hidden="true">·</span>
-                        <span className="tabular-nums">{leadPost.readTimeMinutes} min read</span>
+                        <span className="tabular-nums">
+                          {leadPost.readTimeMinutes} min read
+                        </span>
                       </div>
 
                       <h1 className="font-display text-[38px] sm:text-[48px] lg:text-[56px] font-extrabold text-[#2d1f3d] leading-[1.1] tracking-[-0.03em] text-balance">
@@ -242,7 +306,7 @@ export default function App() {
                           onClick={() => openPost(leadPost.slug)}
                           className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#7c5264] text-white text-sm font-semibold hover:bg-[#6b4455] active:scale-[0.98] transition-all shadow-sm whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#7c5264]"
                         >
-                          <span>Read Pattern Essay</span>
+                          <span>Read Post</span>
                           <ArrowRight size={16} />
                         </button>
 
@@ -257,7 +321,9 @@ export default function App() {
                         >
                           <Bookmark
                             size={15}
-                            className={savedIds.includes(leadPost.id) ? 'fill-current' : ''}
+                            className={
+                              savedIds.includes(leadPost.id) ? 'fill-current' : ''
+                            }
                           />
                           <span>
                             {savedIds.includes(leadPost.id) ? 'Saved' : 'Save Essay'}
@@ -282,7 +348,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Right Column: Matching-Height Atelier Visual */}
                     <div className="lg:col-span-6">
                       <button
                         type="button"
@@ -298,177 +363,258 @@ export default function App() {
                       </button>
                     </div>
                   </div>
-                )}
-
-                {/* Full-Width 4-Column Studio Metrics Strip */}
-                <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 p-5 sm:p-6 rounded-3xl bg-white border border-[#f2e7eb] shadow-xs">
-                  <div className="px-2">
-                    <div className="font-spec text-xs font-semibold text-[#685879]">
-                      Journal Archive
-                    </div>
-                    <div className="mt-1 font-display text-2xl font-bold text-[#2d1f3d] tabular-nums">
-                      {allPosts.length} Essays
-                    </div>
-                  </div>
-
-                  <div className="px-2">
-                    <div className="font-spec text-xs font-semibold text-[#685879]">
-                      Studio Sett Range
-                    </div>
-                    <div className="mt-1 font-display text-2xl font-bold text-[#2d1f3d] tabular-nums">
-                      10–12 EPI
-                    </div>
-                  </div>
-
-                  <div className="px-2">
-                    <div className="font-spec text-xs font-semibold text-[#685879]">
-                      Saved Reading List
-                    </div>
-                    <div className="mt-1 font-display text-2xl font-bold text-[#2d1f3d] tabular-nums">
-                      {savedIds.length} Bookmarked
-                    </div>
-                  </div>
-
-                  <div className="px-2 flex items-center justify-between gap-2">
-                    <div>
-                      <div className="font-spec text-xs font-semibold text-[#685879]">
-                        Static Hosting
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
+                    {/* Empty Blog Editorial Welcome Split */}
+                    <div className="lg:col-span-6 flex flex-col justify-center">
+                      <div className="flex items-center gap-2.5 text-xs font-spec tracking-wider text-[#685879] mb-4">
+                        <span>Danielle</span>
+                        <span aria-hidden="true">·</span>
+                        <span>Fibre Arts Atelier</span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => openStudio('github')}
-                        className="mt-1 inline-flex items-center gap-1.5 font-display text-lg sm:text-xl font-bold text-[#7c5264] hover:text-[#2d1f3d] transition-colors text-left"
-                      >
-                        <Github size={18} />
-                        <span>GitHub Pages</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
 
-            {/* Tier 2: Featured Craft Essays (3-Column Showcase Grid) */}
-            <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 py-14 sm:py-16">
-              <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
-                <div>
-                  <h2 className="font-display text-2xl sm:text-4xl font-bold text-[#2d1f3d] tracking-tight">
-                    Featured Craft Essays
-                  </h2>
-                  <p className="mt-2 text-sm sm:text-base text-[#4f4448]">
-                    Recent pattern notebooks, handspun yarn studies, and botanical dye logs from the studio bench.
-                  </p>
-                </div>
+                      <h1 className="font-display text-[38px] sm:text-[48px] lg:text-[56px] font-extrabold text-[#2d1f3d] leading-[1.1] tracking-[-0.03em] text-balance">
+                        Project Fibre
+                      </h1>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    archiveSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
-                  }
-                  className="text-sm font-semibold text-[#7c5264] hover:text-[#2d1f3d] inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
-                >
-                  <span>Browse Full Archive</span>
-                  <ArrowRight size={15} />
-                </button>
-              </div>
+                      <p className="mt-5 text-base sm:text-lg text-[#4f4448] leading-relaxed max-w-[54ch]">
+                        A Fibre Arts resource and educational journey. Documenting weaving drafts, handspun yarn studies, knitwear, crochet, cross stitch, and botanical embroidery.
+                      </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                {featuredPosts.map((post) => {
-                  const isSaved = savedIds.includes(post.id);
-                  return (
-                    <article
-                      key={post.id}
-                      className="marshmallow-card rounded-3xl overflow-hidden flex flex-col"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => openPost(post.slug)}
-                        className="block w-full aspect-[4/3] overflow-hidden bg-[#f7f3ed] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264]"
-                      >
+                      <div className="mt-7 flex flex-wrap items-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() => openStudio('compose')}
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#7c5264] text-white text-sm font-semibold hover:bg-[#6b4455] active:scale-[0.98] transition-all shadow-sm whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#7c5264]"
+                        >
+                          <PenLine size={16} />
+                          <span>Write Your First Post</span>
+                        </button>
+
+                        <a
+                          href="#/resources"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openResources();
+                          }}
+                          className="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold bg-white border border-[#f2e7eb] text-[#2d1f3d] hover:bg-[#f7f3ed] transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264]"
+                        >
+                          <Layers size={15} />
+                          <span>App Resources</span>
+                        </a>
+                      </div>
+
+                      <div className="mt-8 pt-6 border-t border-[#f2e7eb] flex items-center gap-3">
                         <ResilientImage
-                          src={post.coverImage}
-                          alt={post.title}
-                          className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300"
+                          src={DEFAULT_AUTHOR.avatar}
+                          alt={DEFAULT_AUTHOR.name}
+                          className="w-10 h-10 rounded-full object-cover border border-[#f2e7eb]"
                         />
-                      </button>
-
-                      <div className="p-6 flex-1 flex flex-col">
-                        <div className="flex items-center gap-2 text-xs font-spec text-[#685879] mb-2.5">
-                          <span>{post.category}</span>
-                          <span aria-hidden="true">·</span>
-                          <time dateTime={post.isoDate}>{post.publishedAt}</time>
-                          <span aria-hidden="true">·</span>
-                          <span className="tabular-nums">{post.readTimeMinutes} min</span>
-                        </div>
-
-                        <h3 className="font-display text-xl font-bold text-[#2d1f3d] leading-snug">
-                          <button
-                            type="button"
-                            onClick={() => openPost(post.slug)}
-                            className="text-left hover:text-[#7c5264] transition-colors focus-visible:outline-none focus-visible:underline"
-                          >
-                            {post.title}
-                          </button>
-                        </h3>
-
-                        <p className="mt-2.5 text-sm text-[#4f4448] leading-relaxed line-clamp-3 flex-1">
-                          {post.excerpt}
-                        </p>
-
-                        <div className="mt-5 pt-4 border-t border-[#f2e7eb] flex items-center justify-between gap-3">
-                          <span className="font-spec text-xs font-semibold text-[#685879] tabular-nums truncate">
-                            {post.specs[0]
-                              ? `${post.specs[0].label}: ${post.specs[0].value}`
-                              : post.category}
-                          </span>
-
-                          <div className="flex items-center gap-2 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => toggleSave(post.id)}
-                              aria-label={isSaved ? 'Remove bookmark' : 'Bookmark essay'}
-                              className={`w-8 h-8 rounded-full inline-flex items-center justify-center transition-colors ${
-                                isSaved
-                                  ? 'bg-[#ffd8e6] text-[#301120]'
-                                  : 'text-[#685879] hover:bg-[#f1ede7] hover:text-[#2d1f3d]'
-                              }`}
-                            >
-                              <Bookmark
-                                size={14}
-                                className={isSaved ? 'fill-current' : ''}
-                              />
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => openPost(post.slug)}
-                              className="text-xs font-semibold text-[#7c5264] hover:text-[#2d1f3d] inline-flex items-center gap-1 whitespace-nowrap"
-                            >
-                              <span>Read</span>
-                              <ArrowRight size={13} />
-                            </button>
+                        <div>
+                          <div className="text-sm font-semibold text-[#2d1f3d]">
+                            {DEFAULT_AUTHOR.name}
+                          </div>
+                          <div className="text-xs text-[#4f4448]">
+                            {DEFAULT_AUTHOR.role}
                           </div>
                         </div>
                       </div>
-                    </article>
-                  );
-                })}
+                    </div>
+
+                    <div className="lg:col-span-6">
+                      <div className="w-full h-full rounded-[2rem] overflow-hidden border border-[#f2e7eb] bg-white shadow-sm">
+                        <ResilientImage
+                          src={STUDIO_MEDIA.heroLoom}
+                          alt="Project Fibre sunlit tabletop weaving loom"
+                          className="w-full h-full min-h-[300px] lg:min-h-[420px] object-cover"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Full-Width 4-Column Studio Strip */}
+                <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 p-5 sm:p-6 rounded-3xl bg-white border border-[#f2e7eb] shadow-xs">
+                  <div className="px-2">
+                    <div className="font-spec text-xs font-semibold text-[#685879]">
+                      Published Posts
+                    </div>
+                    <div className="mt-1 font-display text-2xl font-bold text-[#2d1f3d] tabular-nums">
+                      {allPosts.length} {allPosts.length === 1 ? 'Post' : 'Posts'}
+                    </div>
+                  </div>
+
+                  <div className="px-2">
+                    <div className="font-spec text-xs font-semibold text-[#685879]">
+                      Craft Disciplines
+                    </div>
+                    <div className="mt-1 font-display text-2xl font-bold text-[#2d1f3d] tabular-nums">
+                      {CRAFT_CATEGORIES.length} Types
+                    </div>
+                  </div>
+
+                  <div className="px-2">
+                    <div className="font-spec text-xs font-semibold text-[#685879]">
+                      App Resources
+                    </div>
+                    <a
+                      href="#/resources"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        openResources();
+                      }}
+                      className="mt-1 inline-flex items-center gap-1.5 font-display text-lg sm:text-xl font-bold text-[#7c5264] hover:text-[#2d1f3d] transition-colors"
+                    >
+                      <Layers size={18} />
+                      <span>Weaving Draft App</span>
+                    </a>
+                  </div>
+
+                  <div className="px-2">
+                    <div className="font-spec text-xs font-semibold text-[#685879]">
+                      Static Hosting
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openStudio('github')}
+                      className="mt-1 inline-flex items-center gap-1.5 font-display text-lg sm:text-xl font-bold text-[#7c5264] hover:text-[#2d1f3d] transition-colors text-left"
+                    >
+                      <Github size={18} />
+                      <span>GitHub Pages</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </section>
 
-            {/* Tier 3: Studio Dispatches & Filterable Pattern Archive */}
+            {/* Tier 2: Featured Craft Posts (only rendered when posts exist) */}
+            {featuredPosts.length > 0 && (
+              <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 py-14 sm:py-16">
+                <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+                  <div>
+                    <h2 className="font-display text-2xl sm:text-4xl font-bold text-[#2d1f3d] tracking-tight">
+                      Recent Blog Posts
+                    </h2>
+                    <p className="mt-2 text-sm sm:text-base text-[#4f4448]">
+                      Pattern notebooks, yarn studies, and textile guides from the studio bench.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      archiveSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
+                    }
+                    className="text-sm font-semibold text-[#7c5264] hover:text-[#2d1f3d] inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
+                  >
+                    <span>Browse All Posts</span>
+                    <ArrowRight size={15} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                  {featuredPosts.map((post) => {
+                    const isSaved = savedIds.includes(post.id);
+                    return (
+                      <article
+                        key={post.id}
+                        className="marshmallow-card rounded-3xl overflow-hidden flex flex-col"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => openPost(post.slug)}
+                          className="block w-full aspect-[4/3] overflow-hidden bg-[#f7f3ed] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264]"
+                        >
+                          <ResilientImage
+                            src={post.coverImage}
+                            alt={post.title}
+                            className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300"
+                          />
+                        </button>
+
+                        <div className="p-6 flex-1 flex flex-col">
+                          <div className="flex items-center gap-2 text-xs font-spec text-[#685879] mb-2.5">
+                            <span>{post.category}</span>
+                            <span aria-hidden="true">·</span>
+                            <time dateTime={post.isoDate}>{post.publishedAt}</time>
+                            <span aria-hidden="true">·</span>
+                            <span className="tabular-nums">
+                              {post.readTimeMinutes} min
+                            </span>
+                          </div>
+
+                          <h3 className="font-display text-xl font-bold text-[#2d1f3d] leading-snug">
+                            <button
+                              type="button"
+                              onClick={() => openPost(post.slug)}
+                              className="text-left hover:text-[#7c5264] transition-colors focus-visible:outline-none focus-visible:underline"
+                            >
+                              {post.title}
+                            </button>
+                          </h3>
+
+                          <p className="mt-2.5 text-sm text-[#4f4448] leading-relaxed line-clamp-3 flex-1">
+                            {post.excerpt}
+                          </p>
+
+                          <div className="mt-5 pt-4 border-t border-[#f2e7eb] flex items-center justify-between gap-3">
+                            <span className="font-spec text-xs font-semibold text-[#685879] tabular-nums truncate">
+                              {post.specs[0]
+                                ? `${post.specs[0].label}: ${post.specs[0].value}`
+                                : post.category}
+                            </span>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => toggleSave(post.id)}
+                                aria-label={
+                                  isSaved ? 'Remove bookmark' : 'Bookmark essay'
+                                }
+                                className={`w-8 h-8 rounded-full inline-flex items-center justify-center transition-colors ${
+                                  isSaved
+                                    ? 'bg-[#ffd8e6] text-[#301120]'
+                                    : 'text-[#685879] hover:bg-[#f1ede7] hover:text-[#2d1f3d]'
+                                }`}
+                              >
+                                <Bookmark
+                                  size={14}
+                                  className={isSaved ? 'fill-current' : ''}
+                                />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => openPost(post.slug)}
+                                className="text-xs font-semibold text-[#7c5264] hover:text-[#2d1f3d] inline-flex items-center gap-1 whitespace-nowrap"
+                              >
+                                <span>Read</span>
+                                <ArrowRight size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* Tier 3: Blog Posts by Type & Archive */}
             <section
               ref={archiveSectionRef}
+              id="blog-posts"
               className="bg-[#f7f3ed] border-y border-[#f2e7eb] py-14 sm:py-16"
             >
               <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12">
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
                   <div>
                     <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#2d1f3d] tracking-tight">
-                      Studio Dispatches &amp; Pattern Archive
+                      Blog Posts by Type
                     </h2>
                     <p className="mt-1.5 text-sm text-[#4f4448]">
-                      Filter by fibre craft or search swatch measurements and dye notes.
+                      Browse posts across weaving, handspinning, knitwear, crochet, cross stitch, embroidery, natural dye, and pattern notes.
                     </p>
                   </div>
 
@@ -483,7 +629,7 @@ export default function App() {
                       type="search"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search yarn, sett, or topic..."
+                      placeholder="Search posts, fibres, or tools..."
                       aria-label="Search blog archive"
                       className="w-full pl-10 pr-4 py-2.5 rounded-full bg-white border border-[#d3c2c7] text-sm text-[#1c1c18] placeholder:text-[#817478] focus:outline-none focus:ring-2 focus:ring-[#7c5264]"
                     />
@@ -494,7 +640,7 @@ export default function App() {
                 <div
                   className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-6"
                   role="tablist"
-                  aria-label="Filter essays by discipline"
+                  aria-label="Filter blog posts by craft type"
                 >
                   {filterTabs.map((tab) => {
                     const active = filterTab === tab;
@@ -504,7 +650,7 @@ export default function App() {
                         type="button"
                         role="tab"
                         aria-selected={active}
-                        onClick={() => setFilterTab(tab)}
+                        onClick={() => openCategoryPosts(tab, false)}
                         className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264] ${
                           active
                             ? 'bg-[#2d1f3d] text-white shadow-xs'
@@ -512,7 +658,7 @@ export default function App() {
                         }`}
                       >
                         {tab === 'All'
-                          ? 'All Essays'
+                          ? 'All Posts'
                           : tab === 'Saved'
                           ? `Saved (${savedIds.length})`
                           : tab}
@@ -521,25 +667,55 @@ export default function App() {
                   })}
                 </div>
 
-                {/* Archive List Rows */}
+                {/* Archive List / Clean Empty State */}
                 <div className="rounded-3xl bg-white border border-[#f2e7eb] divide-y divide-[#f2e7eb] overflow-hidden">
-                  {filteredArchivePosts.length === 0 ? (
+                  {allPosts.length === 0 ? (
+                    <div className="p-10 sm:p-14 text-center max-w-xl mx-auto">
+                      <h3 className="font-display text-2xl font-bold text-[#2d1f3d]">
+                        No blog posts published yet
+                      </h3>
+                      <p className="mt-2.5 text-sm sm:text-base text-[#4f4448] leading-relaxed">
+                        Project Fibre starts as a fresh studio notebook. Compose your first post in Markdown or import a <code className="font-spec text-xs px-1.5 py-0.5 rounded bg-[#f1ede7] text-[#7c5264]">.md</code> file to begin publishing.
+                      </p>
+                      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => openStudio('compose')}
+                          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#7c5264] text-white text-sm font-semibold hover:bg-[#6b4455] transition-colors"
+                        >
+                          <PenLine size={15} />
+                          <span>Write First Post</span>
+                        </button>
+                        <a
+                          href="#/resources"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openResources();
+                          }}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#f1ede7] text-[#2d1f3d] text-sm font-semibold hover:bg-[#ead5fd] transition-colors"
+                        >
+                          <span>Visit App Resources</span>
+                        </a>
+                      </div>
+                    </div>
+                  ) : filteredArchivePosts.length === 0 ? (
                     <div className="p-10 text-center">
                       <p className="font-display text-lg font-semibold text-[#2d1f3d]">
-                        No matching essays found
+                        No posts in {filterTab === 'All' ? 'this search' : filterTab} yet
                       </p>
                       <p className="mt-1 text-sm text-[#4f4448]">
-                        Try clearing your search or switching back to all craft disciplines.
+                        Try clearing your filters or compose a new post for this category.
                       </p>
                       <button
                         type="button"
                         onClick={() => {
                           setFilterTab('All');
                           setSearchQuery('');
+                          window.location.hash = '#/';
                         }}
                         className="mt-4 px-5 py-2 rounded-full bg-[#e8b4c8] text-[#301120] text-xs font-semibold hover:bg-[#edb8cc] transition-colors"
                       >
-                        Reset Filters
+                        Show All Posts
                       </button>
                     </div>
                   ) : (
@@ -556,7 +732,9 @@ export default function App() {
                               <span aria-hidden="true">·</span>
                               <time dateTime={post.isoDate}>{post.publishedAt}</time>
                               <span aria-hidden="true">·</span>
-                              <span className="tabular-nums">{post.readTimeMinutes} min read</span>
+                              <span className="tabular-nums">
+                                {post.readTimeMinutes} min read
+                              </span>
                             </div>
 
                             <h3 className="font-display text-lg sm:text-xl font-bold text-[#2d1f3d]">
@@ -584,7 +762,9 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => toggleSave(post.id)}
-                              aria-label={isSaved ? 'Remove bookmark' : 'Bookmark essay'}
+                              aria-label={
+                                isSaved ? 'Remove bookmark' : 'Bookmark essay'
+                              }
                               className={`w-9 h-9 rounded-full inline-flex items-center justify-center transition-colors ${
                                 isSaved
                                   ? 'bg-[#ffd8e6] text-[#301120]'
@@ -602,7 +782,7 @@ export default function App() {
                               onClick={() => openPost(post.slug)}
                               className="px-4 py-2 rounded-full bg-[#f1ede7] hover:bg-[#e8b4c8] text-xs font-semibold text-[#2d1f3d] transition-colors whitespace-nowrap"
                             >
-                              Read Essay
+                              Read Post
                             </button>
                           </div>
                         </div>
@@ -613,7 +793,7 @@ export default function App() {
               </div>
             </section>
 
-            {/* Atelier & GitHub Publishing Collective Section */}
+            {/* About Danielle & Studio Tools Section */}
             <section
               ref={atelierSectionRef}
               className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 py-16 sm:py-20"
@@ -635,7 +815,7 @@ export default function App() {
                   </div>
 
                   <h2 className="font-display text-3xl sm:text-4xl font-bold text-[#2d1f3d] tracking-tight text-balance">
-                    A quiet studio notebook across loom, spindle, hook, and needle.
+                    A Fibre Arts resource and educational journey.
                   </h2>
 
                   <p className="text-base text-[#4f4448] leading-relaxed max-w-2xl">
@@ -643,7 +823,18 @@ export default function App() {
                   </p>
 
                   <div className="p-4 sm:p-5 rounded-2xl bg-[#fef3c7]/75 border border-[#f2e7eb] text-sm text-[#2d1f3d] max-w-2xl">
-                    <strong>Ready to publish your own essays?</strong> Use the Post Studio to write in Markdown, download <code className="font-spec text-xs px-1 py-0.5 rounded bg-white/70">.md</code> files, or follow the built-in GitHub Actions deployment guide.
+                    <strong>Studio Companion:</strong> Looking for our browser-based multishaft loom tool? Visit{' '}
+                    <a
+                      href="#/resources"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        openResources();
+                      }}
+                      className="font-semibold underline decoration-[#7c5264] underline-offset-4 hover:text-[#7c5264]"
+                    >
+                      App Resources
+                    </a>{' '}
+                    to launch the Weaving Draft App.
                   </div>
 
                   <div className="pt-2 flex flex-wrap items-center gap-3">
@@ -653,7 +844,7 @@ export default function App() {
                       className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#7c5264] text-white text-sm font-semibold hover:bg-[#6b4455] transition-colors whitespace-nowrap"
                     >
                       <PenLine size={15} />
-                      <span>Compose New Post</span>
+                      <span>Write New Post</span>
                     </button>
 
                     <button
@@ -672,47 +863,95 @@ export default function App() {
         )}
       </main>
 
-      {/* Quiet Editorial Footer */}
-      <footer className="border-t border-[#f2e7eb] bg-[#faf6f0] py-10">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div>
-            <div className="font-display text-base font-bold text-[#2d1f3d]">
+      {/* Editorial Footer with Direct Links to Blog Posts (Including by Type) & App Resources */}
+      <footer className="border-t border-[#f2e7eb] bg-[#faf6f0] py-12">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 grid grid-cols-1 md:grid-cols-12 gap-8">
+          <div className="md:col-span-4">
+            <a
+              href="#/"
+              onClick={(e) => {
+                e.preventDefault();
+                goHome();
+              }}
+              className="font-display text-lg font-bold text-[#2d1f3d]"
+            >
               Project Fibre
-            </div>
-            <p className="mt-1 text-xs text-[#4f4448]">
-              Fibre arts atelier journal &amp; static Markdown blog.
+            </a>
+            <p className="mt-2 text-sm text-[#4f4448] max-w-xs leading-relaxed">
+              A Fibre Arts resource and educational journey
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6 text-xs font-medium text-[#4f4448]">
-            <button
-              type="button"
-              onClick={() => handleNavigate('journal')}
-              className="hover:text-[#2d1f3d] transition-colors"
-            >
-              Journal
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('patterns')}
-              className="hover:text-[#2d1f3d] transition-colors"
-            >
-              Patterns
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('dye')}
-              className="hover:text-[#2d1f3d] transition-colors"
-            >
-              Dye Lab
-            </button>
-            <button
-              type="button"
-              onClick={() => openStudio('github')}
-              className="hover:text-[#2d1f3d] transition-colors"
-            >
-              GitHub Deployment
-            </button>
+          <div className="md:col-span-5">
+            <div className="font-spec text-xs font-semibold text-[#685879] mb-3">
+              Blog Posts by Type
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-4 text-xs font-medium text-[#4f4448]">
+              <a
+                href="#/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openCategoryPosts('All');
+                }}
+                className="hover:text-[#2d1f3d] transition-colors"
+              >
+                All Posts
+              </a>
+              {CRAFT_CATEGORIES.map((category) => (
+                <a
+                  key={category}
+                  href={`#/category/${encodeURIComponent(category)}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    openCategoryPosts(category);
+                  }}
+                  className="hover:text-[#2d1f3d] transition-colors"
+                >
+                  {category}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div className="md:col-span-3">
+            <div className="font-spec text-xs font-semibold text-[#685879] mb-3">
+              Resources &amp; Studio
+            </div>
+            <div className="flex flex-col gap-2 text-xs font-medium text-[#4f4448]">
+              <a
+                href="#/resources"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openResources();
+                }}
+                className="hover:text-[#2d1f3d] transition-colors"
+              >
+                App Resources
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  if (route.type !== 'home') {
+                    goHome();
+                    setTimeout(() => {
+                      atelierSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                    }, 80);
+                  } else {
+                    atelierSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className="text-left hover:text-[#2d1f3d] transition-colors"
+              >
+                About Danielle
+              </button>
+              <button
+                type="button"
+                onClick={() => openStudio('github')}
+                className="text-left hover:text-[#2d1f3d] transition-colors"
+              >
+                GitHub Pages Guide
+              </button>
+            </div>
           </div>
         </div>
       </footer>
