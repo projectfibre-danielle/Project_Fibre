@@ -16,7 +16,7 @@ export interface GaugeSpec {
 export interface AuthorProfile {
   name: string;
   role: string;
-  avatar: string;
+  avatar?: string;
 }
 
 export interface BlogPost {

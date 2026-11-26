@@ -70,11 +70,11 @@ export const PostReader: React.FC<PostReaderProps> = ({
     <article className="relative pb-24">
       {/* Subtle top reading depth progress bar */}
       <div
-        className="fixed top-16 left-0 right-0 h-[3px] bg-[#f2e7eb] z-30 pointer-events-none"
+        className="fixed top-16 left-0 right-0 h-[3px] bg-[#e8b4c8]/30 z-30 pointer-events-none"
         aria-hidden="true"
       >
         <div
-          className="h-full bg-[#7c5264] transition-transform duration-100 origin-left"
+          className="h-full bg-[#2d1f3d] transition-transform duration-100 origin-left"
           style={{ transform: `scaleX(${scrollProgress / 100})` }}
         />
       </div>
@@ -84,30 +84,30 @@ export const PostReader: React.FC<PostReaderProps> = ({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-[#4f4448] hover:text-[#2d1f3d] transition-colors py-2 px-3 -ml-3 rounded-xl hover:bg-[#f1ede7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264]"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[#2d1f3d] hover:bg-[#e8b4c8]/25 transition-colors py-2 px-3.5 -ml-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2d1f3d]"
         >
           <ArrowLeft size={16} />
-          <span>Back to Journal</span>
+          <span>Back to Blog Posts</span>
         </button>
 
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => onToggleSave(post.id)}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold border transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264] ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold border transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2d1f3d] ${
               isSaved
-                ? 'bg-[#ffd8e6] border-[#e8b4c8] text-[#301120]'
-                : 'bg-white border-[#f2e7eb] text-[#4f4448] hover:text-[#2d1f3d] hover:border-[#d3c2c7]'
+                ? 'bg-[#e8b4c8] border-[#e8b4c8] text-[#2d1f3d]'
+                : 'bg-white border-[#e8b4c8]/70 text-[#2d1f3d] hover:bg-[#e8b4c8]/20'
             }`}
           >
             <Bookmark size={14} className={isSaved ? 'fill-current' : ''} />
-            <span>{isSaved ? 'Saved' : 'Save Essay'}</span>
+            <span>{isSaved ? 'Saved' : 'Save Post'}</span>
           </button>
 
           <button
             type="button"
             onClick={handleDownloadMarkdown}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-white border border-[#f2e7eb] text-[#4f4448] hover:text-[#2d1f3d] hover:border-[#d3c2c7] transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264]"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-[#2d1f3d] text-[#fdf9f3] hover:bg-[#3e2b54] transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2d1f3d]"
           >
             {downloaded ? <Check size={14} /> : <Download size={14} />}
             <span>{downloaded ? 'Downloaded .md' : 'Export .md'}</span>
@@ -134,11 +134,20 @@ export const PostReader: React.FC<PostReaderProps> = ({
         </p>
 
         <div className="mt-7 inline-flex items-center gap-3 text-left">
-          <ResilientImage
-            src={post.author.avatar}
-            alt={post.author.name}
-            className="w-11 h-11 rounded-full object-cover border border-[#f2e7eb]"
-          />
+          {post.author.avatar ? (
+            <ResilientImage
+              src={post.author.avatar}
+              alt={post.author.name}
+              className="w-11 h-11 rounded-full object-cover border border-[#f2e7eb]"
+            />
+          ) : (
+            <div
+              className="w-11 h-11 rounded-full bg-[#ffd8e6] border border-[#e8b4c8] flex items-center justify-center font-display text-base font-bold text-[#301120]"
+              aria-hidden="true"
+            >
+              {post.author.name.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div>
             <div className="text-sm font-semibold text-[#2d1f3d]">
               {post.author.name}

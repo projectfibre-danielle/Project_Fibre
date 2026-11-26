@@ -6,18 +6,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
+  ArrowUpRight,
   Bookmark,
-  Github,
   Layers,
-  PenLine,
   Search,
 } from 'lucide-react';
 import { Header, NavDestination } from './components/Header';
 import { PostReader } from './components/PostReader';
-import { PostStudioModal } from './components/PostStudioModal';
 import { ResilientImage } from './components/ResilientImage';
 import { ResourcesPage } from './components/ResourcesPage';
-import { DEFAULT_AUTHOR, INITIAL_POSTS, STUDIO_MEDIA } from './data/posts';
+import { DEFAULT_AUTHOR, INITIAL_POSTS } from './data/posts';
 import { BlogPost, CraftCategory } from './types/blog';
 
 type FilterTab = 'All' | CraftCategory | 'Saved';
@@ -26,8 +24,10 @@ type RouteView =
   | { type: 'resources' }
   | { type: 'post'; slug: string };
 
-const STORAGE_POSTS_KEY = 'project_fibre_custom_posts_v1';
 const STORAGE_SAVED_KEY = 'project_fibre_saved_ids_v1';
+
+const SITE_DESCRIPTION =
+  'A fibre arts blog dedicated to all things fibre and equipping fibre artists with good resources and apps to make all things fibre easier and more enjoyable.';
 
 const CRAFT_CATEGORIES: CraftCategory[] = [
   'Weaving',
@@ -54,7 +54,9 @@ function parseHashRoute(): { route: RouteView; category?: CraftCategory } {
     };
   }
   if (hash.startsWith('#/category/')) {
-    const rawCat = decodeURIComponent(hash.slice('#/category/'.length)) as CraftCategory;
+    const rawCat = decodeURIComponent(
+      hash.slice('#/category/'.length)
+    ) as CraftCategory;
     if (CRAFT_CATEGORIES.includes(rawCat)) {
       return { route: { type: 'home' }, category: rawCat };
     }
@@ -63,15 +65,6 @@ function parseHashRoute(): { route: RouteView; category?: CraftCategory } {
 }
 
 export default function App() {
-  const [customPosts, setCustomPosts] = useState<BlogPost[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_POSTS_KEY);
-      return raw ? (JSON.parse(raw) as BlogPost[]) : [];
-    } catch {
-      return [];
-    }
-  });
-
   const [savedIds, setSavedIds] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_SAVED_KEY);
@@ -87,11 +80,9 @@ export default function App() {
     initialParsed.category || 'All'
   );
   const [searchQuery, setSearchQuery] = useState('');
-  const [studioOpen, setStudioOpen] = useState(false);
-  const [studioTab, setStudioTab] = useState<'compose' | 'github'>('compose');
 
   const archiveSectionRef = useRef<HTMLElement | null>(null);
-  const atelierSectionRef = useRef<HTMLElement | null>(null);
+  const aboutSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -107,24 +98,13 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_POSTS_KEY, JSON.stringify(customPosts));
-    } catch {
-      // Ignore storage quota errors
-    }
-  }, [customPosts]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem(STORAGE_SAVED_KEY, JSON.stringify(savedIds));
     } catch {
       // Ignore storage quota errors
     }
   }, [savedIds]);
 
-  const allPosts = useMemo(
-    () => [...customPosts, ...INITIAL_POSTS],
-    [customPosts]
-  );
+  const allPosts: BlogPost[] = INITIAL_POSTS;
 
   const activePost = useMemo(
     () =>
@@ -239,25 +219,11 @@ export default function App() {
     return 'all-posts';
   }, [route.type, filterTab]);
 
-  const openStudio = (tab: 'compose' | 'github' = 'compose') => {
-    setStudioTab(tab);
-    setStudioOpen(true);
-  };
-
-  const handlePublishPost = (newPost: BlogPost) => {
-    setCustomPosts((prev) => [newPost, ...prev]);
-    openPost(newPost.slug);
-  };
-
   const filterTabs: FilterTab[] = ['All', ...CRAFT_CATEGORIES, 'Saved'];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fdf9f3] text-[#1c1c18]">
-      <Header
-        activeNav={activeNav}
-        onNavigate={handleNavigate}
-        onOpenStudio={() => openStudio('compose')}
-      />
+      <Header activeNav={activeNav} onNavigate={handleNavigate} />
 
       <main className="flex-1">
         {route.type === 'resources' ? (
@@ -274,14 +240,19 @@ export default function App() {
         ) : (
           <>
             {/* Tier 1: Hero on Knitted Dot Mesh Canvas */}
-            <section className="knitted-dot-mesh border-b border-[#f2e7eb]">
-              <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 lg:py-16">
+            <section className="knitted-dot-mesh border-b border-[#e8b4c8]/60 relative overflow-hidden">
+              {/* Soft Blossom Rose radial halo */}
+              <div
+                className="pointer-events-none absolute -top-24 -right-24 w-[420px] h-[420px] rounded-full bg-[#e8b4c8]/25 blur-3xl"
+                aria-hidden="true"
+              />
+
+              <div className="relative max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 py-12 sm:py-16 lg:py-20">
                 {leadPost ? (
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
-                    {/* Lead Post Typography */}
-                    <div className="lg:col-span-6 flex flex-col justify-center">
-                      <div className="flex items-center gap-2.5 text-xs font-spec tracking-wider text-[#685879] mb-4">
-                        <span>Lead Essay</span>
+                    <div className="lg:col-span-7 flex flex-col justify-center">
+                      <div className="flex items-center gap-2.5 text-xs font-spec tracking-wider text-[#2d1f3d]/75 mb-4">
+                        <span>Lead Post</span>
                         <span aria-hidden="true">·</span>
                         <span>{leadPost.category}</span>
                         <span aria-hidden="true">·</span>
@@ -304,7 +275,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => openPost(leadPost.slug)}
-                          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#7c5264] text-white text-sm font-semibold hover:bg-[#6b4455] active:scale-[0.98] transition-all shadow-sm whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#7c5264]"
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#e8b4c8] text-[#2d1f3d] text-sm font-semibold hover:bg-[#dfa2bb] active:scale-[0.98] transition-all shadow-sm whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2d1f3d]"
                         >
                           <span>Read Post</span>
                           <ArrowRight size={16} />
@@ -313,10 +284,10 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => toggleSave(leadPost.id)}
-                          className={`inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold border transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264] ${
+                          className={`inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold border transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2d1f3d] ${
                             savedIds.includes(leadPost.id)
-                              ? 'bg-[#ffd8e6] border-[#e8b4c8] text-[#301120]'
-                              : 'bg-white border-[#f2e7eb] text-[#2d1f3d] hover:bg-[#f7f3ed]'
+                              ? 'bg-[#2d1f3d] border-[#2d1f3d] text-[#e8b4c8]'
+                              : 'bg-white border-[#e8b4c8] text-[#2d1f3d] hover:bg-[#e8b4c8]/20'
                           }`}
                         >
                           <Bookmark
@@ -326,70 +297,131 @@ export default function App() {
                             }
                           />
                           <span>
-                            {savedIds.includes(leadPost.id) ? 'Saved' : 'Save Essay'}
+                            {savedIds.includes(leadPost.id) ? 'Saved' : 'Save Post'}
                           </span>
                         </button>
                       </div>
+                    </div>
 
-                      <div className="mt-8 pt-6 border-t border-[#f2e7eb] flex items-center gap-3">
-                        <ResilientImage
-                          src={leadPost.author.avatar}
-                          alt={leadPost.author.name}
-                          className="w-10 h-10 rounded-full object-cover border border-[#f2e7eb]"
-                        />
+                    <div className="lg:col-span-5 flex flex-col justify-between p-7 sm:p-8 rounded-[2rem] bg-[#2d1f3d] text-[#fdf9f3] shadow-md">
+                      <div>
+                        <div className="font-spec text-xs font-semibold text-[#e8b4c8] mb-3">
+                          Loom &amp; Gauge Specs
+                        </div>
+                        <dl className="divide-y divide-white/10">
+                          {leadPost.specs.slice(0, 4).map((spec) => (
+                            <div
+                              key={spec.label}
+                              className="py-2.5 flex items-baseline justify-between gap-4"
+                            >
+                              <dt className="font-spec text-xs text-[#e8b4c8]/85">
+                                {spec.label}
+                              </dt>
+                              <dd className="font-spec text-sm font-semibold text-[#fdf9f3] tabular-nums">
+                                {spec.value}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+
+                      <div className="mt-6 pt-5 border-t border-white/15 flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-full bg-[#e8b4c8] flex items-center justify-center font-display text-sm font-bold text-[#2d1f3d]"
+                          aria-hidden="true"
+                        >
+                          {leadPost.author.name.charAt(0).toUpperCase()}
+                        </div>
                         <div>
-                          <div className="text-sm font-semibold text-[#2d1f3d]">
+                          <div className="text-sm font-semibold text-[#fdf9f3]">
                             {leadPost.author.name}
                           </div>
-                          <div className="text-xs text-[#4f4448]">
+                          <div className="text-xs text-[#fdf9f3]/75">
                             {leadPost.author.role}
                           </div>
                         </div>
                       </div>
                     </div>
-
-                    <div className="lg:col-span-6">
-                      <button
-                        type="button"
-                        onClick={() => openPost(leadPost.slug)}
-                        className="w-full h-full block rounded-[2rem] overflow-hidden border border-[#f2e7eb] bg-white shadow-sm group text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264]"
-                        aria-label={`Open ${leadPost.title}`}
-                      >
-                        <ResilientImage
-                          src={leadPost.coverImage}
-                          alt={leadPost.title}
-                          className="w-full h-full min-h-[300px] lg:min-h-[440px] object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                        />
-                      </button>
-                    </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
                     {/* Empty Blog Editorial Welcome Split */}
-                    <div className="lg:col-span-6 flex flex-col justify-center">
-                      <div className="flex items-center gap-2.5 text-xs font-spec tracking-wider text-[#685879] mb-4">
-                        <span>Danielle</span>
+                    <div className="lg:col-span-7 flex flex-col justify-center">
+                      <div className="flex items-center gap-2.5 text-xs font-spec tracking-wider text-[#2d1f3d]/80 mb-4">
+                        <span>Founded by Danielle</span>
                         <span aria-hidden="true">·</span>
-                        <span>Fibre Arts Atelier</span>
+                        <span>Weaving, Spinning, Knitting, Crochet &amp; Stitch</span>
                       </div>
 
                       <h1 className="font-display text-[38px] sm:text-[48px] lg:text-[56px] font-extrabold text-[#2d1f3d] leading-[1.1] tracking-[-0.03em] text-balance">
                         Project Fibre
                       </h1>
 
-                      <p className="mt-5 text-base sm:text-lg text-[#4f4448] leading-relaxed max-w-[54ch]">
-                        A Fibre Arts resource and educational journey. Documenting weaving drafts, handspun yarn studies, knitwear, crochet, cross stitch, and botanical embroidery.
+                      <p className="mt-5 text-base sm:text-lg text-[#4f4448] leading-relaxed max-w-[56ch]">
+                        {SITE_DESCRIPTION}
                       </p>
 
-                      <div className="mt-7 flex flex-wrap items-center gap-4">
+                      <div className="mt-8 flex flex-wrap items-center gap-4">
+                        <a
+                          href="#/resources"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openResources();
+                          }}
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#e8b4c8] text-[#2d1f3d] text-sm font-semibold hover:bg-[#dfa2bb] active:scale-[0.98] transition-all shadow-sm whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2d1f3d]"
+                        >
+                          <Layers size={16} />
+                          <span>Explore App Resources</span>
+                        </a>
+
                         <button
                           type="button"
-                          onClick={() => openStudio('compose')}
-                          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#7c5264] text-white text-sm font-semibold hover:bg-[#6b4455] active:scale-[0.98] transition-all shadow-sm whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#7c5264]"
+                          onClick={() =>
+                            archiveSectionRef.current?.scrollIntoView({
+                              behavior: 'smooth',
+                            })
+                          }
+                          className="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold bg-[#2d1f3d] text-[#fdf9f3] hover:bg-[#3d2b52] transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2d1f3d]"
                         >
-                          <PenLine size={16} />
-                          <span>Write Your First Post</span>
+                          <span>Browse by Craft</span>
+                          <ArrowRight size={15} />
                         </button>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Featured Companion App Card in #2d1f3d & #e8b4c8 */}
+                    <div className="lg:col-span-5 flex flex-col justify-between p-7 sm:p-8 rounded-[2rem] bg-[#2d1f3d] text-[#fdf9f3] shadow-md">
+                      <div className="space-y-4">
+                        <div className="font-spec text-xs font-semibold text-[#e8b4c8]">
+                          Featured Studio Tool
+                        </div>
+
+                        <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#fdf9f3] tracking-tight">
+                          <a
+                            href="https://projectfibreweave.base44.app"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-[#e8b4c8] transition-colors underline decoration-[#e8b4c8] decoration-2 underline-offset-4"
+                          >
+                            Weaving Draft App
+                          </a>
+                        </h2>
+
+                        <p className="text-sm sm:text-base text-[#fdf9f3]/85 leading-relaxed">
+                          Project Fibre Weave is a multishaft loom draft browser based application
+                        </p>
+                      </div>
+
+                      <div className="mt-6 pt-5 border-t border-white/15 flex flex-wrap items-center justify-between gap-3">
+                        <a
+                          href="https://projectfibreweave.base44.app"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#e8b4c8] text-[#2d1f3d] text-xs font-semibold hover:bg-[#dfa2bb] transition-colors"
+                        >
+                          <span>Launch Weaving Draft App</span>
+                          <ArrowUpRight size={14} />
+                        </a>
 
                         <a
                           href="#/resources"
@@ -397,44 +429,17 @@ export default function App() {
                             e.preventDefault();
                             openResources();
                           }}
-                          className="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold bg-white border border-[#f2e7eb] text-[#2d1f3d] hover:bg-[#f7f3ed] transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264]"
+                          className="text-xs font-spec font-semibold text-[#e8b4c8] hover:text-white transition-colors"
                         >
-                          <Layers size={15} />
-                          <span>App Resources</span>
+                          All Resources →
                         </a>
-                      </div>
-
-                      <div className="mt-8 pt-6 border-t border-[#f2e7eb] flex items-center gap-3">
-                        <ResilientImage
-                          src={DEFAULT_AUTHOR.avatar}
-                          alt={DEFAULT_AUTHOR.name}
-                          className="w-10 h-10 rounded-full object-cover border border-[#f2e7eb]"
-                        />
-                        <div>
-                          <div className="text-sm font-semibold text-[#2d1f3d]">
-                            {DEFAULT_AUTHOR.name}
-                          </div>
-                          <div className="text-xs text-[#4f4448]">
-                            {DEFAULT_AUTHOR.role}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="lg:col-span-6">
-                      <div className="w-full h-full rounded-[2rem] overflow-hidden border border-[#f2e7eb] bg-white shadow-sm">
-                        <ResilientImage
-                          src={STUDIO_MEDIA.heroLoom}
-                          alt="Project Fibre sunlit tabletop weaving loom"
-                          className="w-full h-full min-h-[300px] lg:min-h-[420px] object-cover"
-                        />
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Full-Width 4-Column Studio Strip */}
-                <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 p-5 sm:p-6 rounded-3xl bg-white border border-[#f2e7eb] shadow-xs">
+                {/* Full-Width 4-Column Studio Overview Strip */}
+                <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 p-5 sm:p-6 rounded-3xl bg-white border border-[#e8b4c8]/70 shadow-xs">
                   <div className="px-2">
                     <div className="font-spec text-xs font-semibold text-[#685879]">
                       Published Posts
@@ -455,6 +460,15 @@ export default function App() {
 
                   <div className="px-2">
                     <div className="font-spec text-xs font-semibold text-[#685879]">
+                      Saved Reading List
+                    </div>
+                    <div className="mt-1 font-display text-2xl font-bold text-[#2d1f3d] tabular-nums">
+                      {savedIds.length} Saved
+                    </div>
+                  </div>
+
+                  <div className="px-2">
+                    <div className="font-spec text-xs font-semibold text-[#685879]">
                       App Resources
                     </div>
                     <a
@@ -463,31 +477,17 @@ export default function App() {
                         e.preventDefault();
                         openResources();
                       }}
-                      className="mt-1 inline-flex items-center gap-1.5 font-display text-lg sm:text-xl font-bold text-[#7c5264] hover:text-[#2d1f3d] transition-colors"
+                      className="mt-1 inline-flex items-center gap-1.5 font-display text-lg sm:text-xl font-bold text-[#2d1f3d] underline decoration-[#e8b4c8] decoration-2 underline-offset-4 hover:text-[#7c5264] transition-colors"
                     >
-                      <Layers size={18} />
+                      <Layers size={18} className="text-[#2d1f3d]" />
                       <span>Weaving Draft App</span>
                     </a>
-                  </div>
-
-                  <div className="px-2">
-                    <div className="font-spec text-xs font-semibold text-[#685879]">
-                      Static Hosting
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => openStudio('github')}
-                      className="mt-1 inline-flex items-center gap-1.5 font-display text-lg sm:text-xl font-bold text-[#7c5264] hover:text-[#2d1f3d] transition-colors text-left"
-                    >
-                      <Github size={18} />
-                      <span>GitHub Pages</span>
-                    </button>
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* Tier 2: Featured Craft Posts (only rendered when posts exist) */}
+            {/* Tier 2: Recent Blog Posts (shown once Danielle adds posts) */}
             {featuredPosts.length > 0 && (
               <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 py-14 sm:py-16">
                 <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
@@ -505,7 +505,7 @@ export default function App() {
                     onClick={() =>
                       archiveSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
                     }
-                    className="text-sm font-semibold text-[#7c5264] hover:text-[#2d1f3d] inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
+                    className="text-sm font-semibold text-[#2d1f3d] underline decoration-[#e8b4c8] decoration-2 underline-offset-4 hover:text-[#7c5264] inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
                   >
                     <span>Browse All Posts</span>
                     <ArrowRight size={15} />
@@ -520,17 +520,19 @@ export default function App() {
                         key={post.id}
                         className="marshmallow-card rounded-3xl overflow-hidden flex flex-col"
                       >
-                        <button
-                          type="button"
-                          onClick={() => openPost(post.slug)}
-                          className="block w-full aspect-[4/3] overflow-hidden bg-[#f7f3ed] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264]"
-                        >
-                          <ResilientImage
-                            src={post.coverImage}
-                            alt={post.title}
-                            className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300"
-                          />
-                        </button>
+                        {post.coverImage && (
+                          <button
+                            type="button"
+                            onClick={() => openPost(post.slug)}
+                            className="block w-full aspect-[4/3] overflow-hidden bg-[#f7f3ed] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2d1f3d]"
+                          >
+                            <ResilientImage
+                              src={post.coverImage}
+                              alt={post.title}
+                              className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300"
+                            />
+                          </button>
+                        )}
 
                         <div className="p-6 flex-1 flex flex-col">
                           <div className="flex items-center gap-2 text-xs font-spec text-[#685879] mb-2.5">
@@ -557,7 +559,7 @@ export default function App() {
                             {post.excerpt}
                           </p>
 
-                          <div className="mt-5 pt-4 border-t border-[#f2e7eb] flex items-center justify-between gap-3">
+                          <div className="mt-5 pt-4 border-t border-[#e8b4c8]/40 flex items-center justify-between gap-3">
                             <span className="font-spec text-xs font-semibold text-[#685879] tabular-nums truncate">
                               {post.specs[0]
                                 ? `${post.specs[0].label}: ${post.specs[0].value}`
@@ -569,12 +571,12 @@ export default function App() {
                                 type="button"
                                 onClick={() => toggleSave(post.id)}
                                 aria-label={
-                                  isSaved ? 'Remove bookmark' : 'Bookmark essay'
+                                  isSaved ? 'Remove bookmark' : 'Bookmark post'
                                 }
                                 className={`w-8 h-8 rounded-full inline-flex items-center justify-center transition-colors ${
                                   isSaved
-                                    ? 'bg-[#ffd8e6] text-[#301120]'
-                                    : 'text-[#685879] hover:bg-[#f1ede7] hover:text-[#2d1f3d]'
+                                    ? 'bg-[#e8b4c8] text-[#2d1f3d]'
+                                    : 'text-[#2d1f3d]/70 hover:bg-[#e8b4c8]/25 hover:text-[#2d1f3d]'
                                 }`}
                               >
                                 <Bookmark
@@ -586,7 +588,7 @@ export default function App() {
                               <button
                                 type="button"
                                 onClick={() => openPost(post.slug)}
-                                className="text-xs font-semibold text-[#7c5264] hover:text-[#2d1f3d] inline-flex items-center gap-1 whitespace-nowrap"
+                                className="px-3.5 py-1.5 rounded-full bg-[#e8b4c8]/35 hover:bg-[#e8b4c8] text-xs font-semibold text-[#2d1f3d] inline-flex items-center gap-1 whitespace-nowrap transition-colors"
                               >
                                 <span>Read</span>
                                 <ArrowRight size={13} />
@@ -605,7 +607,7 @@ export default function App() {
             <section
               ref={archiveSectionRef}
               id="blog-posts"
-              className="bg-[#f7f3ed] border-y border-[#f2e7eb] py-14 sm:py-16"
+              className="bg-[#f7f3ed] border-y border-[#e8b4c8]/55 py-14 sm:py-16"
             >
               <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12">
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
@@ -622,7 +624,7 @@ export default function App() {
                   <div className="relative w-full lg:w-80">
                     <Search
                       size={16}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#685879]"
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#2d1f3d]/60"
                       aria-hidden="true"
                     />
                     <input
@@ -631,7 +633,7 @@ export default function App() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search posts, fibres, or tools..."
                       aria-label="Search blog archive"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-full bg-white border border-[#d3c2c7] text-sm text-[#1c1c18] placeholder:text-[#817478] focus:outline-none focus:ring-2 focus:ring-[#7c5264]"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-full bg-white border border-[#e8b4c8]/80 text-sm text-[#2d1f3d] placeholder:text-[#817478] focus:outline-none focus:ring-2 focus:ring-[#2d1f3d]"
                     />
                   </div>
                 </div>
@@ -651,10 +653,10 @@ export default function App() {
                         role="tab"
                         aria-selected={active}
                         onClick={() => openCategoryPosts(tab, false)}
-                        className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c5264] ${
+                        className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2d1f3d] ${
                           active
-                            ? 'bg-[#2d1f3d] text-white shadow-xs'
-                            : 'bg-white border border-[#f2e7eb] text-[#4f4448] hover:text-[#2d1f3d] hover:bg-[#fdf9f3]'
+                            ? 'bg-[#2d1f3d] text-[#e8b4c8] shadow-xs'
+                            : 'bg-white border border-[#e8b4c8]/60 text-[#2d1f3d] hover:bg-[#e8b4c8]/25'
                         }`}
                       >
                         {tab === 'All'
@@ -668,32 +670,25 @@ export default function App() {
                 </div>
 
                 {/* Archive List / Clean Empty State */}
-                <div className="rounded-3xl bg-white border border-[#f2e7eb] divide-y divide-[#f2e7eb] overflow-hidden">
+                <div className="rounded-3xl bg-white border border-[#e8b4c8]/60 divide-y divide-[#e8b4c8]/40 overflow-hidden">
                   {allPosts.length === 0 ? (
                     <div className="p-10 sm:p-14 text-center max-w-xl mx-auto">
                       <h3 className="font-display text-2xl font-bold text-[#2d1f3d]">
                         No blog posts published yet
                       </h3>
                       <p className="mt-2.5 text-sm sm:text-base text-[#4f4448] leading-relaxed">
-                        Project Fibre starts as a fresh studio notebook. Compose your first post in Markdown or import a <code className="font-spec text-xs px-1.5 py-0.5 rounded bg-[#f1ede7] text-[#7c5264]">.md</code> file to begin publishing.
+                        New articles on weaving, spinning, knitting, crochet, cross stitch, and embroidery will appear here as Danielle publishes them.
                       </p>
                       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => openStudio('compose')}
-                          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#7c5264] text-white text-sm font-semibold hover:bg-[#6b4455] transition-colors"
-                        >
-                          <PenLine size={15} />
-                          <span>Write First Post</span>
-                        </button>
                         <a
                           href="#/resources"
                           onClick={(e) => {
                             e.preventDefault();
                             openResources();
                           }}
-                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#f1ede7] text-[#2d1f3d] text-sm font-semibold hover:bg-[#ead5fd] transition-colors"
+                          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#e8b4c8] text-[#2d1f3d] text-sm font-semibold hover:bg-[#dfa2bb] transition-colors"
                         >
+                          <Layers size={15} />
                           <span>Visit App Resources</span>
                         </a>
                       </div>
@@ -704,7 +699,7 @@ export default function App() {
                         No posts in {filterTab === 'All' ? 'this search' : filterTab} yet
                       </p>
                       <p className="mt-1 text-sm text-[#4f4448]">
-                        Try clearing your filters or compose a new post for this category.
+                        Try clearing your filters or selecting another craft category.
                       </p>
                       <button
                         type="button"
@@ -713,7 +708,7 @@ export default function App() {
                           setSearchQuery('');
                           window.location.hash = '#/';
                         }}
-                        className="mt-4 px-5 py-2 rounded-full bg-[#e8b4c8] text-[#301120] text-xs font-semibold hover:bg-[#edb8cc] transition-colors"
+                        className="mt-4 px-5 py-2 rounded-full bg-[#e8b4c8] text-[#2d1f3d] text-xs font-semibold hover:bg-[#dfa2bb] transition-colors"
                       >
                         Show All Posts
                       </button>
@@ -724,7 +719,7 @@ export default function App() {
                       return (
                         <div
                           key={post.id}
-                          className="p-5 sm:px-7 sm:py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#fdf9f3] transition-colors"
+                          className="p-5 sm:px-7 sm:py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#e8b4c8]/10 transition-colors"
                         >
                           <div className="max-w-2xl">
                             <div className="flex items-center gap-2 text-xs font-spec text-[#685879] mb-1.5">
@@ -763,12 +758,12 @@ export default function App() {
                               type="button"
                               onClick={() => toggleSave(post.id)}
                               aria-label={
-                                isSaved ? 'Remove bookmark' : 'Bookmark essay'
+                                isSaved ? 'Remove bookmark' : 'Bookmark post'
                               }
                               className={`w-9 h-9 rounded-full inline-flex items-center justify-center transition-colors ${
                                 isSaved
-                                  ? 'bg-[#ffd8e6] text-[#301120]'
-                                  : 'bg-[#f7f3ed] text-[#685879] hover:text-[#2d1f3d]'
+                                  ? 'bg-[#e8b4c8] text-[#2d1f3d]'
+                                  : 'bg-[#f7f3ed] text-[#2d1f3d]/70 hover:bg-[#e8b4c8]/25 hover:text-[#2d1f3d]'
                               }`}
                             >
                               <Bookmark
@@ -780,7 +775,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => openPost(post.slug)}
-                              className="px-4 py-2 rounded-full bg-[#f1ede7] hover:bg-[#e8b4c8] text-xs font-semibold text-[#2d1f3d] transition-colors whitespace-nowrap"
+                              className="px-4 py-2 rounded-full bg-[#2d1f3d] hover:bg-[#3d2b52] text-xs font-semibold text-[#e8b4c8] transition-colors whitespace-nowrap"
                             >
                               Read Post
                             </button>
@@ -793,68 +788,67 @@ export default function App() {
               </div>
             </section>
 
-            {/* About Danielle & Studio Tools Section */}
+            {/* About Danielle Section */}
             <section
-              ref={atelierSectionRef}
+              ref={aboutSectionRef}
               className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 py-16 sm:py-20"
             >
-              <div className="rounded-[2rem] bg-white border border-[#f2e7eb] p-6 sm:p-10 lg:p-12 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-                <div className="lg:col-span-4">
-                  <div className="rounded-3xl overflow-hidden border border-[#f2e7eb] bg-[#f7f3ed]">
-                    <ResilientImage
-                      src={STUDIO_MEDIA.authorPortrait}
-                      alt={DEFAULT_AUTHOR.name}
-                      className="w-full aspect-square object-cover"
-                    />
-                  </div>
-                </div>
-
+              <div className="rounded-[2rem] bg-white border border-[#e8b4c8]/70 p-6 sm:p-10 lg:p-12 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
                 <div className="lg:col-span-8 space-y-5">
-                  <div className="font-spec text-xs font-semibold text-[#685879] tracking-wide">
+                  <div className="font-spec text-xs font-semibold text-[#7c5264] tracking-wide">
                     Founded by Danielle
                   </div>
 
                   <h2 className="font-display text-3xl sm:text-4xl font-bold text-[#2d1f3d] tracking-tight text-balance">
-                    A Fibre Arts resource and educational journey.
+                    A quiet home for every strand, stitch, and shuttle.
                   </h2>
 
                   <p className="text-base text-[#4f4448] leading-relaxed max-w-2xl">
-                    Hi, I’m Danielle—founder of Project Fibre and a weaver, spinner, knitter, crocheter, cross stitcher, and embroiderer. This journal collects my ongoing textile experiments, yarn recipes, and stitch charts, exported cleanly to YAML-frontmatter Markdown for GitHub Pages.
+                    Hi, I’m Danielle—founder of Project Fibre and a weaver, spinner, knitter, crocheter, cross stitcher, and embroiderer. {SITE_DESCRIPTION}
                   </p>
 
-                  <div className="p-4 sm:p-5 rounded-2xl bg-[#fef3c7]/75 border border-[#f2e7eb] text-sm text-[#2d1f3d] max-w-2xl">
-                    <strong>Studio Companion:</strong> Looking for our browser-based multishaft loom tool? Visit{' '}
+                  <div className="pt-2 flex flex-wrap items-center gap-3">
                     <a
                       href="#/resources"
                       onClick={(e) => {
                         e.preventDefault();
                         openResources();
                       }}
-                      className="font-semibold underline decoration-[#7c5264] underline-offset-4 hover:text-[#7c5264]"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#e8b4c8] text-[#2d1f3d] text-sm font-semibold hover:bg-[#dfa2bb] transition-colors whitespace-nowrap"
                     >
-                      App Resources
-                    </a>{' '}
-                    to launch the Weaving Draft App.
+                      <Layers size={15} />
+                      <span>App Resources</span>
+                    </a>
+
+                    <a
+                      href="https://projectfibreweave.base44.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#2d1f3d] text-[#fdf9f3] text-sm font-semibold hover:bg-[#3d2b52] transition-colors whitespace-nowrap"
+                    >
+                      <span>Weaving Draft App</span>
+                      <ArrowUpRight size={15} />
+                    </a>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-4 space-y-4">
+                  <div className="p-6 rounded-3xl bg-[#e8b4c8]/25 border border-[#e8b4c8]/70">
+                    <div className="font-spec text-xs font-bold text-[#2d1f3d] mb-2">
+                      Crafts Explored
+                    </div>
+                    <p className="text-sm text-[#2d1f3d] leading-relaxed">
+                      {DEFAULT_AUTHOR.role.replace('Founder of Project Fibre · ', '')}
+                    </p>
                   </div>
 
-                  <div className="pt-2 flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => openStudio('compose')}
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#7c5264] text-white text-sm font-semibold hover:bg-[#6b4455] transition-colors whitespace-nowrap"
-                    >
-                      <PenLine size={15} />
-                      <span>Write New Post</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => openStudio('github')}
-                      className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#f1ede7] text-[#2d1f3d] text-sm font-semibold hover:bg-[#ead5fd] transition-colors whitespace-nowrap"
-                    >
-                      <Github size={15} />
-                      <span>GitHub Pages Guide</span>
-                    </button>
+                  <div className="p-6 rounded-3xl bg-[#2d1f3d] text-[#fdf9f3]">
+                    <div className="font-spec text-xs font-bold text-[#e8b4c8] mb-2">
+                      Studio Companion
+                    </div>
+                    <p className="text-sm text-[#fdf9f3]/85 leading-relaxed">
+                      Project Fibre Weave is a multishaft loom draft browser based application.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -863,8 +857,8 @@ export default function App() {
         )}
       </main>
 
-      {/* Editorial Footer with Direct Links to Blog Posts (Including by Type) & App Resources */}
-      <footer className="border-t border-[#f2e7eb] bg-[#faf6f0] py-12">
+      {/* Deep Mulberry Plum Footer with Spun Blossom Rose Accents */}
+      <footer className="border-t border-[#e8b4c8]/40 bg-[#2d1f3d] text-[#fdf9f3] py-12">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-4">
             <a
@@ -873,27 +867,27 @@ export default function App() {
                 e.preventDefault();
                 goHome();
               }}
-              className="font-display text-lg font-bold text-[#2d1f3d]"
+              className="font-display text-lg font-bold text-[#e8b4c8] hover:text-white transition-colors"
             >
               Project Fibre
             </a>
-            <p className="mt-2 text-sm text-[#4f4448] max-w-xs leading-relaxed">
-              A Fibre Arts resource and educational journey
+            <p className="mt-2.5 text-sm text-[#fdf9f3]/80 max-w-xs leading-relaxed">
+              {SITE_DESCRIPTION}
             </p>
           </div>
 
           <div className="md:col-span-5">
-            <div className="font-spec text-xs font-semibold text-[#685879] mb-3">
+            <div className="font-spec text-xs font-semibold text-[#e8b4c8] mb-3">
               Blog Posts by Type
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-4 text-xs font-medium text-[#4f4448]">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-4 text-xs font-medium text-[#fdf9f3]/85">
               <a
                 href="#/"
                 onClick={(e) => {
                   e.preventDefault();
                   openCategoryPosts('All');
                 }}
-                className="hover:text-[#2d1f3d] transition-colors"
+                className="hover:text-[#e8b4c8] transition-colors"
               >
                 All Posts
               </a>
@@ -905,7 +899,7 @@ export default function App() {
                     e.preventDefault();
                     openCategoryPosts(category);
                   }}
-                  className="hover:text-[#2d1f3d] transition-colors"
+                  className="hover:text-[#e8b4c8] transition-colors"
                 >
                   {category}
                 </a>
@@ -914,19 +908,27 @@ export default function App() {
           </div>
 
           <div className="md:col-span-3">
-            <div className="font-spec text-xs font-semibold text-[#685879] mb-3">
-              Resources &amp; Studio
+            <div className="font-spec text-xs font-semibold text-[#e8b4c8] mb-3">
+              App Resources &amp; Info
             </div>
-            <div className="flex flex-col gap-2 text-xs font-medium text-[#4f4448]">
+            <div className="flex flex-col gap-2 text-xs font-medium text-[#fdf9f3]/85">
               <a
                 href="#/resources"
                 onClick={(e) => {
                   e.preventDefault();
                   openResources();
                 }}
-                className="hover:text-[#2d1f3d] transition-colors"
+                className="hover:text-[#e8b4c8] transition-colors"
               >
                 App Resources
+              </a>
+              <a
+                href="https://projectfibreweave.base44.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#e8b4c8] transition-colors"
+              >
+                Weaving Draft App
               </a>
               <button
                 type="button"
@@ -934,35 +936,20 @@ export default function App() {
                   if (route.type !== 'home') {
                     goHome();
                     setTimeout(() => {
-                      atelierSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                      aboutSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
                     }, 80);
                   } else {
-                    atelierSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                    aboutSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
-                className="text-left hover:text-[#2d1f3d] transition-colors"
+                className="text-left hover:text-[#e8b4c8] transition-colors"
               >
                 About Danielle
-              </button>
-              <button
-                type="button"
-                onClick={() => openStudio('github')}
-                className="text-left hover:text-[#2d1f3d] transition-colors"
-              >
-                GitHub Pages Guide
               </button>
             </div>
           </div>
         </div>
       </footer>
-
-      <PostStudioModal
-        isOpen={studioOpen}
-        initialTab={studioTab}
-        allPosts={allPosts}
-        onClose={() => setStudioOpen(false)}
-        onPublishPost={handlePublishPost}
-      />
     </div>
   );
 }
