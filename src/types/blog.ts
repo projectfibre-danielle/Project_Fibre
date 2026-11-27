@@ -33,6 +33,7 @@ export interface BlogPost {
   coverCaption?: string;
   featuredTier: 'lead' | 'featured' | 'dispatch';
   specs: GaugeSpec[];
+  tags?: string[];
   butterTip?: string;
   sageCheck?: string;
   markdownBody: string;

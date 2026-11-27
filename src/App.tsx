@@ -142,11 +142,17 @@ export default function App() {
         return false;
       }
       if (!query) return true;
+      const safeTitle = typeof post.title === 'string' ? post.title : '';
+      const safeExcerpt = typeof post.excerpt === 'string' ? post.excerpt : '';
+      const safeCategory = typeof post.category === 'string' ? post.category : '';
+      const safeSpecs = Array.isArray(post.specs) ? post.specs : [];
+      const safeTags = Array.isArray(post.tags) ? post.tags : [];
       return (
-        post.title.toLowerCase().includes(query) ||
-        post.excerpt.toLowerCase().includes(query) ||
-        post.category.toLowerCase().includes(query) ||
-        post.specs.some((s) => s.value.toLowerCase().includes(query))
+        safeTitle.toLowerCase().includes(query) ||
+        safeExcerpt.toLowerCase().includes(query) ||
+        safeCategory.toLowerCase().includes(query) ||
+        safeSpecs.some((s) => String(s?.value ?? '').toLowerCase().includes(query)) ||
+        safeTags.some((t) => String(t ?? '').toLowerCase().includes(query))
       );
     });
   }, [allPosts, filterTab, savedIds, searchQuery]);
@@ -306,23 +312,35 @@ export default function App() {
                     <div className="lg:col-span-5 flex flex-col justify-between p-7 sm:p-8 rounded-[2rem] bg-[#2d1f3d] text-[#fdf9f3] shadow-md">
                       <div>
                         <div className="font-spec text-xs font-semibold text-[#e8b4c8] mb-3">
-                          Loom &amp; Gauge Specs
+                          {(Array.isArray(leadPost.specs) ? leadPost.specs : []).length > 0
+                            ? 'Loom & Gauge Specs'
+                            : 'Post Details'}
                         </div>
-                        <dl className="divide-y divide-white/10">
-                          {leadPost.specs.slice(0, 4).map((spec) => (
-                            <div
-                              key={spec.label}
-                              className="py-2.5 flex items-baseline justify-between gap-4"
-                            >
-                              <dt className="font-spec text-xs text-[#e8b4c8]/85">
-                                {spec.label}
-                              </dt>
-                              <dd className="font-spec text-sm font-semibold text-[#fdf9f3] tabular-nums">
-                                {spec.value}
-                              </dd>
-                            </div>
-                          ))}
-                        </dl>
+                        {(Array.isArray(leadPost.specs) ? leadPost.specs : []).length > 0 ? (
+                          <dl className="divide-y divide-white/10">
+                            {(Array.isArray(leadPost.specs) ? leadPost.specs : [])
+                              .slice(0, 4)
+                              .map((spec) => (
+                                <div
+                                  key={spec.label}
+                                  className="py-2.5 flex items-baseline justify-between gap-4"
+                                >
+                                  <dt className="font-spec text-xs text-[#e8b4c8]/85">
+                                    {spec.label}
+                                  </dt>
+                                  <dd className="font-spec text-sm font-semibold text-[#fdf9f3] tabular-nums">
+                                    {spec.value}
+                                  </dd>
+                                </div>
+                              ))}
+                          </dl>
+                        ) : (
+                          <p className="text-sm text-[#fdf9f3]/80 leading-relaxed">
+                            {(Array.isArray(leadPost.tags) ? leadPost.tags : []).length > 0
+                              ? (leadPost.tags || []).slice(0, 6).join(' · ')
+                              : `${leadPost.category} · ${leadPost.readTimeMinutes} min read`}
+                          </p>
+                        )}
                       </div>
 
                       <div className="mt-6 pt-5 border-t border-white/15 flex items-center gap-3">
@@ -330,14 +348,14 @@ export default function App() {
                           className="w-10 h-10 rounded-full bg-[#e8b4c8] flex items-center justify-center font-display text-sm font-bold text-[#2d1f3d]"
                           aria-hidden="true"
                         >
-                          {leadPost.author.name.charAt(0).toUpperCase()}
+                          {(leadPost.author?.name || 'D').charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <div className="text-sm font-semibold text-[#fdf9f3]">
-                            {leadPost.author.name}
+                            {leadPost.author?.name || DEFAULT_AUTHOR.name}
                           </div>
                           <div className="text-xs text-[#fdf9f3]/75">
-                            {leadPost.author.role}
+                            {leadPost.author?.role || DEFAULT_AUTHOR.role}
                           </div>
                         </div>
                       </div>
@@ -561,8 +579,10 @@ export default function App() {
 
                           <div className="mt-5 pt-4 border-t border-[#e8b4c8]/40 flex items-center justify-between gap-3">
                             <span className="font-spec text-xs font-semibold text-[#685879] tabular-nums truncate">
-                              {post.specs[0]
+                              {Array.isArray(post.specs) && post.specs[0]
                                 ? `${post.specs[0].label}: ${post.specs[0].value}`
+                                : Array.isArray(post.tags) && post.tags.length > 0
+                                ? post.tags.slice(0, 2).join(' · ')
                                 : post.category}
                             </span>
 
@@ -748,7 +768,7 @@ export default function App() {
                           </div>
 
                           <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-                            {post.specs[0] && (
+                            {Array.isArray(post.specs) && post.specs[0] && (
                               <span className="font-spec text-xs font-semibold text-[#685879] tabular-nums">
                                 {post.specs[0].value}
                               </span>

@@ -44,6 +44,18 @@ export const PostReader: React.FC<PostReaderProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [post.id]);
 
+  const safeTitle = typeof post.title === 'string' ? post.title : 'Untitled Post';
+  const safeExcerpt = typeof post.excerpt === 'string' ? post.excerpt : '';
+  const safeMarkdown = typeof post.markdownBody === 'string' ? post.markdownBody : '';
+  const safeSpecs = Array.isArray(post.specs) ? post.specs : [];
+  const safeTags = Array.isArray(post.tags) ? post.tags : [];
+  const authorName =
+    typeof post.author?.name === 'string' && post.author.name.trim()
+      ? post.author.name.trim()
+      : 'Danielle';
+  const authorRole =
+    typeof post.author?.role === 'string' ? post.author.role : '';
+
   const currentIdx = allPosts.findIndex((p) => p.id === post.id);
   const prevPost = currentIdx > 0 ? allPosts[currentIdx - 1] : null;
   const nextPost =
@@ -57,7 +69,7 @@ export const PostReader: React.FC<PostReaderProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${post.isoDate}-${post.slug}.md`;
+    link.download = `${post.isoDate || 'post'}-${post.slug || 'article'}.md`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -117,27 +129,35 @@ export const PostReader: React.FC<PostReaderProps> = ({
 
       {/* Editorial Essay Header */}
       <header className="max-w-[920px] mx-auto px-4 sm:px-6 text-center pt-4 pb-10">
-        <div className="flex items-center justify-center gap-2.5 text-xs font-spec tracking-wider text-[#685879] mb-4">
+        <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs font-spec tracking-wider text-[#685879] mb-4">
           <span>{post.category}</span>
           <span aria-hidden="true">·</span>
           <time dateTime={post.isoDate}>{post.publishedAt}</time>
           <span aria-hidden="true">·</span>
           <span className="tabular-nums">{post.readTimeMinutes} min read</span>
+          {safeTags.length > 0 && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>{safeTags.join(' · ')}</span>
+            </>
+          )}
         </div>
 
         <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-[#2d1f3d] leading-[1.12] tracking-tight text-balance">
-          {post.title}
+          {safeTitle}
         </h1>
 
-        <p className="mt-5 text-base sm:text-lg text-[#4f4448] max-w-2xl mx-auto leading-relaxed">
-          {post.excerpt}
-        </p>
+        {safeExcerpt && (
+          <p className="mt-5 text-base sm:text-lg text-[#4f4448] max-w-2xl mx-auto leading-relaxed">
+            {safeExcerpt}
+          </p>
+        )}
 
         <div className="mt-7 inline-flex items-center gap-3 text-left">
-          {post.author.avatar ? (
+          {post.author?.avatar ? (
             <ResilientImage
               src={post.author.avatar}
-              alt={post.author.name}
+              alt={authorName}
               className="w-11 h-11 rounded-full object-cover border border-[#f2e7eb]"
             />
           ) : (
@@ -145,14 +165,14 @@ export const PostReader: React.FC<PostReaderProps> = ({
               className="w-11 h-11 rounded-full bg-[#ffd8e6] border border-[#e8b4c8] flex items-center justify-center font-display text-base font-bold text-[#301120]"
               aria-hidden="true"
             >
-              {post.author.name.charAt(0).toUpperCase()}
+              {authorName.charAt(0).toUpperCase()}
             </div>
           )}
           <div>
             <div className="text-sm font-semibold text-[#2d1f3d]">
-              {post.author.name}
+              {authorName}
             </div>
-            <div className="text-xs text-[#4f4448]">{post.author.role}</div>
+            <div className="text-xs text-[#4f4448]">{authorRole}</div>
           </div>
         </div>
       </header>
@@ -163,7 +183,7 @@ export const PostReader: React.FC<PostReaderProps> = ({
           <div className="overflow-hidden rounded-[2rem] border border-[#f2e7eb] bg-[#f7f3ed] shadow-sm">
             <ResilientImage
               src={post.coverImage}
-              alt={post.title}
+              alt={safeTitle}
               className="w-full aspect-[16/9] object-cover"
             />
           </div>
@@ -178,18 +198,18 @@ export const PostReader: React.FC<PostReaderProps> = ({
       {/* Asymmetric Reading Grid: 70% Prose / 30% Studio Margin Notes */}
       <div className="max-w-[1160px] mx-auto px-4 sm:px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
         <div className="lg:col-span-8 max-w-[68ch]">
-          {renderMarkdownBlocks(post.markdownBody, true)}
+          {renderMarkdownBlocks(safeMarkdown, true)}
         </div>
 
         <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
           {/* Loom & Gauge Specs Card */}
-          {post.specs.length > 0 && (
+          {safeSpecs.length > 0 && (
             <div className="p-6 rounded-3xl bg-white border border-[#f2e7eb] shadow-sm">
               <h2 className="font-display text-base font-bold text-[#2d1f3d] mb-4">
                 Loom &amp; Gauge Specs
               </h2>
               <dl className="divide-y divide-[#f2e7eb]">
-                {post.specs.map((spec) => (
+                {safeSpecs.map((spec) => (
                   <div
                     key={spec.label}
                     className="py-2.5 flex items-baseline justify-between gap-4"

@@ -2,7 +2,8 @@ import React from 'react';
 import { BlogPost, CraftCategory } from '../types/blog';
 
 export function slugify(text: string): string {
-  return text
+  const safeText = typeof text === 'string' ? text : '';
+  return safeText
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9\s-]/g, '')
@@ -11,30 +12,41 @@ export function slugify(text: string): string {
 }
 
 export function estimateReadTime(markdown: string): number {
-  const words = markdown.trim().split(/\s+/).filter(Boolean).length;
+  const safeMarkdown = typeof markdown === 'string' ? markdown : '';
+  const words = safeMarkdown.trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 180));
 }
 
 export function postToMarkdownFile(post: BlogPost): string {
-  const specsYaml = post.specs
-    .map((s) => `  - label: "${s.label.replace(/"/g, '\\"')}"\n    value: "${s.value.replace(/"/g, '\\"')}"`)
+  const safeSpecs = Array.isArray(post.specs) ? post.specs : [];
+  const safeTitle = typeof post.title === 'string' ? post.title : '';
+  const safeExcerpt = typeof post.excerpt === 'string' ? post.excerpt : '';
+  const safeBody = typeof post.markdownBody === 'string' ? post.markdownBody : '';
+  const safeAuthorName =
+    typeof post.author?.name === 'string' ? post.author.name : 'Danielle';
+
+  const specsYaml = safeSpecs
+    .map(
+      (s) =>
+        `  - label: "${String(s.label ?? '').replace(/"/g, '\\"')}"\n    value: "${String(s.value ?? '').replace(/"/g, '\\"')}"`
+    )
     .join('\n');
 
   return `---
-title: "${post.title.replace(/"/g, '\\"')}"
-slug: "${post.slug}"
-date: "${post.isoDate}"
-category: "${post.category}"
-readTime: ${post.readTimeMinutes}
-excerpt: "${post.excerpt.replace(/"/g, '\\"')}"
-author: "${post.author.name}"
+title: "${safeTitle.replace(/"/g, '\\"')}"
+slug: "${post.slug ?? ''}"
+date: "${post.isoDate ?? ''}"
+category: "${post.category ?? 'Pattern Notes'}"
+readTime: ${post.readTimeMinutes ?? 1}
+excerpt: "${safeExcerpt.replace(/"/g, '\\"')}"
+author: "${safeAuthorName}"
 ${post.butterTip ? `patternTip: "${post.butterTip.replace(/"/g, '\\"')}"` : ''}
 ${post.sageCheck ? `gaugeCheck: "${post.sageCheck.replace(/"/g, '\\"')}"` : ''}
 specs:
 ${specsYaml}
 ---
 
-${post.markdownBody.trim()}
+${safeBody.trim()}
 `;
 }
 
@@ -161,7 +173,8 @@ function renderInline(text: string): React.ReactNode[] {
 }
 
 export function renderMarkdownBlocks(markdown: string, useDropCap = true): React.ReactNode[] {
-  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+  const safeMarkdown = typeof markdown === 'string' ? markdown : '';
+  const lines = safeMarkdown.replace(/\r\n/g, '\n').split('\n');
   const elements: React.ReactNode[] = [];
   let i = 0;
   let firstParagraphSeen = false;
