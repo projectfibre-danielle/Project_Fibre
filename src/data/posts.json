@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "8b69921a-32d2-4a39-8bd6-94806af3006c",
+    "slug": "testea",
+    "title": "testea",
+    "date": "2026-11-26",
+    "category": "code",
+    "tags": [
+      "code",
+      "trails",
+      "trials"
+    ],
+    "excerpt": "A helpful guide for reading a weaving draft for multi-shaft looms.",
+    "content": "<div style=\"text-align: center\">\n\n# Test center\n\n</div>\n\n**<span style=\"color: #2563eb\">_test  blue_</span>**\n\n> [!CAUTION]\n> Urgent info that needs immediate attention to avoid problems.\n\n> [!WARNING]\n> Urgent info that needs immediate attention to avoid problems.\n\n# <span style=\"color: #e8b4c8\">Test</span>\n\n## <span style=\"color: #e8b4c8\">test</span>\n\n### <span style=\"color: #e8b4c8\">test</span>\n\n> [!NOTE]\n> This is a test\n\n> [!TIP]\n> Helpful advice for doing things better or more easily.\n\ntesting _testing_ **testing**\n\n**_testing_** test\n\n$EPI=WPI*.67$\n\n> test\n\n## test\n\n### test\n\n![Image](https://s2.coinmarketcap.com/static/img/coins/200x200/35434.png)\n\n<iframe src=\"https://www.youtube.com/embed/dQw4w9WgXcQ\" title=\"Embedded video\" width=\"100%\" height=\"400\" frameborder=\"0\" allowfullscreen></iframe>\n\n<span style=\"color: #7c3aed\">test</span>therainbow\n\ntest line\n\n---\n\ntest line break\n\ntest\n\n- uno\n- do\n- t\n\n1. mic\n2. check[make your own drafts](https://projectfibreweave.base44.app/)\n\n<div style=\"text-align: right\">\n\n## Test Right<br />\n\n</div>\n\n> \"Quote\"",
+    "createdAt": "2026-11-27T04:41:38.851Z",
+    "updatedAt": "2026-11-27T04:41:38.851Z"
+  }
+]
