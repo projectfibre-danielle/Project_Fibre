@@ -18,10 +18,13 @@ const VALID_CATEGORIES: CraftCategory[] = [
 ];
 
 function normalizeCategory(rawCategory: unknown): CraftCategory {
-  if (typeof rawCategory === 'string') {
+  if (typeof rawCategory === 'string' && rawCategory.trim()) {
     const cleaned = rawCategory.trim().toLowerCase();
     const matched = VALID_CATEGORIES.find((c) => c.toLowerCase() === cleaned);
     if (matched) return matched;
+    return rawCategory
+      .trim()
+      .replace(/\b\w/g, (ch) => ch.toUpperCase());
   }
   return 'Pattern Notes';
 }

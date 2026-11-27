@@ -225,7 +225,18 @@ export default function App() {
     return 'all-posts';
   }, [route.type, filterTab]);
 
-  const filterTabs: FilterTab[] = ['All', ...CRAFT_CATEGORIES, 'Saved'];
+  const extraCategories = useMemo(() => {
+    const known = new Set<string>(CRAFT_CATEGORIES);
+    const extras: string[] = [];
+    for (const p of allPosts) {
+      if (p.category && !known.has(p.category) && !extras.includes(p.category)) {
+        extras.push(p.category);
+      }
+    }
+    return extras;
+  }, [allPosts]);
+
+  const filterTabs: FilterTab[] = ['All', ...CRAFT_CATEGORIES, ...extraCategories, 'Saved'];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fdf9f3] text-[#1c1c18]">

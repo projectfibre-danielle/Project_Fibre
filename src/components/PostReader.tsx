@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Bookmark, Check, Download, ArrowRight } from 'lucide-react';
 import { BlogPost } from '../types/blog';
-import { postToMarkdownFile, renderMarkdownBlocks } from '../utils/markdown';
+import { postToMarkdownFile } from '../utils/markdown';
+import { MarkdownRenderer } from './MarkdownRenderer';
 import { ResilientImage } from './ResilientImage';
 
 interface PostReaderProps {
@@ -195,62 +196,65 @@ export const PostReader: React.FC<PostReaderProps> = ({
         </figure>
       )}
 
-      {/* Asymmetric Reading Grid: 70% Prose / 30% Studio Margin Notes */}
-      <div className="max-w-[1160px] mx-auto px-4 sm:px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
-        <div className="lg:col-span-8 max-w-[68ch]">
-          {renderMarkdownBlocks(safeMarkdown, true)}
+      {/* Reading Canvas: 2-Column Asymmetric Grid if specs/notes exist, centered editorial column otherwise */}
+      {safeSpecs.length > 0 || post.butterTip || post.sageCheck ? (
+        <div className="max-w-[1160px] mx-auto px-4 sm:px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+          <div className="lg:col-span-8 max-w-[68ch]">
+            <MarkdownRenderer content={safeMarkdown} />
+          </div>
+
+          <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+            {safeSpecs.length > 0 && (
+              <div className="p-6 rounded-3xl bg-white border border-[#f2e7eb] shadow-sm">
+                <h2 className="font-display text-base font-bold text-[#2d1f3d] mb-4">
+                  Loom &amp; Gauge Specs
+                </h2>
+                <dl className="divide-y divide-[#f2e7eb]">
+                  {safeSpecs.map((spec) => (
+                    <div
+                      key={spec.label}
+                      className="py-2.5 flex items-baseline justify-between gap-4"
+                    >
+                      <dt className="font-spec text-xs font-semibold text-[#685879] tracking-wide">
+                        {spec.label}
+                      </dt>
+                      <dd className="font-spec text-sm font-semibold text-[#2d1f3d] tabular-nums text-right">
+                        {spec.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+
+            {post.butterTip && (
+              <div className="p-6 rounded-3xl bg-[#fef3c7]/80 border border-[#f2e7eb]">
+                <div className="font-spec text-xs font-bold tracking-wide text-[#6b4455] mb-2">
+                  Atelier Pattern Note
+                </div>
+                <p className="text-sm leading-relaxed text-[#2d1f3d]">
+                  {post.butterTip}
+                </p>
+              </div>
+            )}
+
+            {post.sageCheck && (
+              <div className="p-6 rounded-3xl bg-[#d1fae5]/70 border border-[#f2e7eb]">
+                <div className="font-spec text-xs font-bold tracking-wide text-[#2d1f3d] mb-2">
+                  Gauge &amp; Fibre Check
+                </div>
+                <p className="text-sm leading-relaxed text-[#1c1c18]">
+                  {post.sageCheck}
+                </p>
+              </div>
+            )}
+          </aside>
         </div>
-
-        <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
-          {/* Loom & Gauge Specs Card */}
-          {safeSpecs.length > 0 && (
-            <div className="p-6 rounded-3xl bg-white border border-[#f2e7eb] shadow-sm">
-              <h2 className="font-display text-base font-bold text-[#2d1f3d] mb-4">
-                Loom &amp; Gauge Specs
-              </h2>
-              <dl className="divide-y divide-[#f2e7eb]">
-                {safeSpecs.map((spec) => (
-                  <div
-                    key={spec.label}
-                    className="py-2.5 flex items-baseline justify-between gap-4"
-                  >
-                    <dt className="font-spec text-xs font-semibold text-[#685879] tracking-wide">
-                      {spec.label}
-                    </dt>
-                    <dd className="font-spec text-sm font-semibold text-[#2d1f3d] tabular-nums text-right">
-                      {spec.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
-
-          {/* Warm Butter Pattern Tip */}
-          {post.butterTip && (
-            <div className="p-6 rounded-3xl bg-[#fef3c7]/80 border border-[#f2e7eb]">
-              <div className="font-spec text-xs font-bold tracking-wide text-[#6b4455] mb-2">
-                Atelier Pattern Note
-              </div>
-              <p className="text-sm leading-relaxed text-[#2d1f3d]">
-                {post.butterTip}
-              </p>
-            </div>
-          )}
-
-          {/* Minty Sage Fibre & Gauge Check */}
-          {post.sageCheck && (
-            <div className="p-6 rounded-3xl bg-[#d1fae5]/70 border border-[#f2e7eb]">
-              <div className="font-spec text-xs font-bold tracking-wide text-[#2d1f3d] mb-2">
-                Gauge &amp; Fibre Check
-              </div>
-              <p className="text-sm leading-relaxed text-[#1c1c18]">
-                {post.sageCheck}
-              </p>
-            </div>
-          )}
-        </aside>
-      </div>
+      ) : (
+        <div className="max-w-[780px] mx-auto px-4 sm:px-6">
+          <MarkdownRenderer content={safeMarkdown} />
+        </div>
+      )}
 
       {/* Previous / Next Essay Navigation */}
       <nav

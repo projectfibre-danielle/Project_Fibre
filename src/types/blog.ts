@@ -6,7 +6,8 @@ export type CraftCategory =
   | 'Cross Stitch'
   | 'Embroidery'
   | 'Natural Dye'
-  | 'Pattern Notes';
+  | 'Pattern Notes'
+  | (string & {});
 
 export interface GaugeSpec {
   label: string;
