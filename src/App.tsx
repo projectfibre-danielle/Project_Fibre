@@ -835,7 +835,7 @@ export default function App() {
                   </h2>
 
                   <p className="text-base text-[#4f4448] leading-relaxed max-w-2xl">
-                    Hi, I’m Danielle—founder of Project Fibre and a weaver, spinner, knitter, crocheter, cross stitcher, and embroiderer. {SITE_DESCRIPTION}
+                    Hi, I’m Danielle—founder of Project Fibre and a weaver, spinner, knitter, crocheter, cross stitcher, and embroiderer. Project Fibre is a fibre arts blog and online resource dedicated to all things fibre and equipping fibre artists with good apps to make all things fibre easier and more enjoyable.
                   </p>
 
                   <div className="pt-2 flex flex-wrap items-center gap-3">
