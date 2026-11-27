@@ -42,19 +42,25 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onBack }) => {
                 <span>Browser-Based Weaving Tool</span>
               </div>
 
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#fdf9f3] tracking-tight">
-                <a
-                  href="https://projectfibreweave.base44.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[#e8b4c8] transition-colors underline decoration-[#e8b4c8] decoration-2 underline-offset-4"
-                >
-                  Weaving Draft App
-                </a>
-              </h2>
+              <div>
+                <div className="font-display text-2xl sm:text-3xl font-bold text-[#fdf9f3] tracking-tight">
+                  <a
+                    href="https://projectfibreweave.base44.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-[#e8b4c8] transition-colors underline decoration-[#e8b4c8] decoration-2 underline-offset-4"
+                  >
+                    Project Fibre: Weave
+                  </a>
+                </div>
+
+                <h2 className="mt-1.5 font-display text-lg sm:text-xl font-semibold text-[#e8b4c8] tracking-tight">
+                  A weaving draft making application
+                </h2>
+              </div>
 
               <p className="text-base text-[#fdf9f3]/85 leading-relaxed">
-                Project Fibre Weave is a multishaft loom draft browser based application
+                A web based browser application for making weaving drafts for multishaft looms. Project Fibre: Weave does have options for ombre and marled yarn. Make your own drafts today, save it as a png image or as an editable .wif file, or save it to your own account to store it on the cloud.
               </p>
             </div>
 
@@ -65,7 +71,7 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onBack }) => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#e8b4c8] text-[#2d1f3d] text-sm font-semibold hover:bg-[#dfa2bb] active:scale-[0.98] transition-all shadow-sm whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#e8b4c8]"
               >
-                <span>Weaving Draft App</span>
+                <span>Open Project Fibre: Weave</span>
                 <ArrowUpRight size={16} />
               </a>
             </div>

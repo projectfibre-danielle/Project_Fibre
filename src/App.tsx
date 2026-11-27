@@ -425,19 +425,23 @@ export default function App() {
                           Featured Studio Tool
                         </div>
 
-                        <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#fdf9f3] tracking-tight">
+                        <div className="font-display text-2xl sm:text-3xl font-bold text-[#fdf9f3] tracking-tight">
                           <a
                             href="https://projectfibreweave.base44.app"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:text-[#e8b4c8] transition-colors underline decoration-[#e8b4c8] decoration-2 underline-offset-4"
                           >
-                            Weaving Draft App
+                            Project Fibre: Weave
                           </a>
+                        </div>
+
+                        <h2 className="font-display text-base sm:text-lg font-semibold text-[#e8b4c8] tracking-tight -mt-2">
+                          A weaving draft making application
                         </h2>
 
                         <p className="text-sm sm:text-base text-[#fdf9f3]/85 leading-relaxed">
-                          Project Fibre Weave is a multishaft loom draft browser based application
+                          A web based browser application for making weaving drafts for multishaft looms. Project Fibre: Weave does have options for ombre and marled yarn. Make your own drafts today, save it as a png image or as an editable .wif file, or save it to your own account to store it on the cloud.
                         </p>
                       </div>
 
@@ -448,7 +452,7 @@ export default function App() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#e8b4c8] text-[#2d1f3d] text-xs font-semibold hover:bg-[#dfa2bb] transition-colors"
                         >
-                          <span>Launch Weaving Draft App</span>
+                          <span>Launch Project Fibre: Weave</span>
                           <ArrowUpRight size={14} />
                         </a>
 
@@ -509,7 +513,7 @@ export default function App() {
                       className="mt-1 inline-flex items-center gap-1.5 font-display text-lg sm:text-xl font-bold text-[#2d1f3d] underline decoration-[#e8b4c8] decoration-2 underline-offset-4 hover:text-[#7c5264] transition-colors"
                     >
                       <Layers size={18} className="text-[#2d1f3d]" />
-                      <span>Weaving Draft App</span>
+                      <span>Project Fibre: Weave</span>
                     </a>
                   </div>
                 </div>
@@ -857,7 +861,7 @@ export default function App() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#2d1f3d] text-[#fdf9f3] text-sm font-semibold hover:bg-[#3d2b52] transition-colors whitespace-nowrap"
                     >
-                      <span>Weaving Draft App</span>
+                      <span>Project Fibre: Weave</span>
                       <ArrowUpRight size={15} />
                     </a>
                   </div>
@@ -875,10 +879,10 @@ export default function App() {
 
                   <div className="p-6 rounded-3xl bg-[#2d1f3d] text-[#fdf9f3]">
                     <div className="font-spec text-xs font-bold text-[#e8b4c8] mb-2">
-                      Studio Companion
+                      Project Fibre: Weave
                     </div>
                     <p className="text-sm text-[#fdf9f3]/85 leading-relaxed">
-                      Project Fibre Weave is a multishaft loom draft browser based application.
+                      A web based browser application for making weaving drafts for multishaft looms with ombre and marled yarn options, PNG/.wif export, and cloud account saving.
                     </p>
                   </div>
                 </div>
@@ -959,7 +963,7 @@ export default function App() {
                 rel="noopener noreferrer"
                 className="hover:text-[#e8b4c8] transition-colors"
               >
-                Weaving Draft App
+                Project Fibre: Weave
               </a>
               <button
                 type="button"
