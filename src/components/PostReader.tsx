@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Bookmark, Check, Download, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Bookmark, ArrowRight } from 'lucide-react';
 import { BlogPost } from '../types/blog';
-import { postToMarkdownFile } from '../utils/markdown';
+import { GiscusComments } from './GiscusComments';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { ResilientImage } from './ResilientImage';
 
@@ -23,7 +23,6 @@ export const PostReader: React.FC<PostReaderProps> = ({
   onSelectPost,
 }) => {
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [downloaded, setDownloaded] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
@@ -64,21 +63,6 @@ export const PostReader: React.FC<PostReaderProps> = ({
       ? allPosts[currentIdx + 1]
       : null;
 
-  const handleDownloadMarkdown = () => {
-    const content = postToMarkdownFile(post);
-    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${post.isoDate || 'post'}-${post.slug || 'article'}.md`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    setDownloaded(true);
-    setTimeout(() => setDownloaded(false), 2000);
-  };
-
   return (
     <article className="relative pb-24">
       {/* Subtle top reading depth progress bar */}
@@ -115,15 +99,6 @@ export const PostReader: React.FC<PostReaderProps> = ({
           >
             <Bookmark size={14} className={isSaved ? 'fill-current' : ''} />
             <span>{isSaved ? 'Saved' : 'Save Post'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDownloadMarkdown}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-[#2d1f3d] text-[#fdf9f3] hover:bg-[#3e2b54] transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2d1f3d]"
-          >
-            {downloaded ? <Check size={14} /> : <Download size={14} />}
-            <span>{downloaded ? 'Downloaded .md' : 'Export .md'}</span>
           </button>
         </div>
       </div>
@@ -255,6 +230,9 @@ export const PostReader: React.FC<PostReaderProps> = ({
           <MarkdownRenderer content={safeMarkdown} />
         </div>
       )}
+
+      {/* Reader Comments via Giscus (GitHub Discussions) */}
+      <GiscusComments key={post.slug || post.id} slug={post.slug || post.id} title={safeTitle} />
 
       {/* Previous / Next Essay Navigation */}
       <nav
