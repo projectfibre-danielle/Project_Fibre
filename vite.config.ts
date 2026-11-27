@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: '/Project_fibre/',
+    base: '/Project_Fibre/',
     plugins: [
       react(),
       tailwindcss(),
