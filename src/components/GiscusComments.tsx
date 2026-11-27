@@ -1,23 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { MessageSquare } from 'lucide-react';
 
-/**
- * ============================================================================
- * GISCUS (GITHUB DISCUSSIONS) CONFIGURATION
- * ============================================================================
- * 1. Enable GitHub Discussions on your Project_Fibre repository
- *    (Repository Settings -> General -> Features -> Discussions).
- * 2. Install the Giscus GitHub App: https://github.com/apps/giscus
- * 3. Visit https://giscus.app, enter "<your-github-username>/Project_Fibre",
- *    choose "Discussion title contains page pathname" or "Specific term",
- *    pick your Discussion category (e.g. "Comments" or "Announcements"),
- *    and paste your generated values below:
- */
 export const GISCUS_CONFIG = {
-  repo: 'YOUR_GITHUB_USERNAME/Project_Fibre', // e.g. "danielle/Project_Fibre"
-  repoId: '', // <-- PASTE YOUR repoId FROM https://giscus.app HERE
-  category: 'Announcements', // <-- Match your Discussions category name
-  categoryId: '', // <-- PASTE YOUR categoryId FROM https://giscus.app HERE
+  repo: 'projectfibre-danielle/Project_Fibre',
+  repoId: 'R_kgDOV68Dew',
+  category: 'General',
+  categoryId: 'DIC_kwDOV68De84DL-Gv',
 };
 
 interface GiscusCommentsProps {
@@ -42,7 +30,6 @@ export const GiscusComments: React.FC<GiscusCommentsProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
-    // Cleanly reset container when navigating between posts
     container.innerHTML = '';
 
     if (!isConfigured) return;
@@ -56,14 +43,13 @@ export const GiscusComments: React.FC<GiscusCommentsProps> = ({
     script.setAttribute('data-repo-id', GISCUS_CONFIG.repoId);
     script.setAttribute('data-category', GISCUS_CONFIG.category);
     script.setAttribute('data-category-id', GISCUS_CONFIG.categoryId);
-    // Map uniquely per post slug so hash-based routes (#/post/...) get separate threads
     script.setAttribute('data-mapping', 'specific');
     script.setAttribute('data-term', discussionTerm);
     script.setAttribute('data-strict', '0');
     script.setAttribute('data-reactions-enabled', '1');
     script.setAttribute('data-emit-metadata', '0');
     script.setAttribute('data-input-position', 'top');
-    script.setAttribute('data-theme', 'light');
+    script.setAttribute('data-theme', 'preferred_color_scheme');
     script.setAttribute('data-lang', 'en');
 
     container.appendChild(script);
