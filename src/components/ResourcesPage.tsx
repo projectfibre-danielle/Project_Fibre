@@ -71,7 +71,7 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onBack }) => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#e8b4c8] text-[#2d1f3d] text-sm font-semibold hover:bg-[#dfa2bb] active:scale-[0.98] transition-all shadow-sm whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#e8b4c8]"
               >
-                <span>Open Project Fibre: Weave</span>
+                <span>Try Project Fibre: Weave today</span>
                 <ArrowUpRight size={16} />
               </a>
             </div>

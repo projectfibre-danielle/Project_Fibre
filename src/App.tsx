@@ -452,7 +452,7 @@ export default function App() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#e8b4c8] text-[#2d1f3d] text-xs font-semibold hover:bg-[#dfa2bb] transition-colors"
                         >
-                          <span>Launch Project Fibre: Weave</span>
+                          <span>Try Project Fibre: Weave today</span>
                           <ArrowUpRight size={14} />
                         </a>
 
