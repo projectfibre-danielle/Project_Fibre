@@ -1,5 +1,20 @@
 [
   {
+    "draftId": "27e38867-5faa-45fb-9cb6-6f61d307f093",
+    "activeDraftId": "27e38867-5faa-45fb-9cb6-6f61d307f093",
+    "editingId": null,
+    "title": "How To Plan A Multi-shaft Loom Weaving Project",
+    "slug": "how-to-plan-a-multi-shaft-loom-weaving-project",
+    "date": "2026-11-27",
+    "categoryTags": "Weaving, educational",
+    "summary": "",
+    "content": "",
+    "createdAt": null,
+    "savedAt": "2026-11-28T04:40:48.616Z",
+    "publishedAt": null,
+    "syncedAt": "2026-11-28T04:40:49.561Z"
+  },
+  {
     "draftId": "a7a62c4d-86d2-4f95-85db-530d3cfcdca0",
     "activeDraftId": "a7a62c4d-86d2-4f95-85db-530d3cfcdca0",
     "editingId": null,
@@ -13,20 +28,5 @@
     "savedAt": "2026-11-28T04:40:46.274Z",
     "publishedAt": null,
     "syncedAt": "2026-11-28T04:40:47.327Z"
-  },
-  {
-    "draftId": "27e38867-5faa-45fb-9cb6-6f61d307f093",
-    "activeDraftId": "27e38867-5faa-45fb-9cb6-6f61d307f093",
-    "editingId": null,
-    "title": "How To Plan A Multi-shaft Loom Weaving Project",
-    "slug": "how-to-plan-a-multi-shaft-loom-weaving-project",
-    "date": "2026-11-27",
-    "categoryTags": "Weaving, educational",
-    "summary": "",
-    "content": "",
-    "createdAt": null,
-    "savedAt": "2026-11-28T03:50:33.854Z",
-    "publishedAt": null,
-    "syncedAt": "2026-11-28T04:40:24.545Z"
   }
 ]
